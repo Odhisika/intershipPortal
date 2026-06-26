@@ -3,6 +3,7 @@ import string
 
 from django.db import models
 from django.utils import timezone
+from django.core.validators import FileExtensionValidator
 from django.contrib.auth.hashers import make_password, check_password
 
 
@@ -320,7 +321,10 @@ class Student(models.Model):
     level = models.CharField(max_length=10, choices=LEVEL_CHOICES)
     department = models.CharField(max_length=50, choices=DEPARTMENT_CHOICES, blank=True, null=True)
     duration = models.CharField(max_length=100)
-    attachment_letter = models.FileField(upload_to='attachment_letters/', blank=True, null=True)
+    attachment_letter = models.FileField(
+        upload_to='attachment_letters/', blank=True, null=True,
+        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'])],
+    )
 
     cohort = models.ForeignKey(Cohort, on_delete=models.SET_NULL, related_name='students', blank=True, null=True)
 
@@ -476,7 +480,10 @@ class LearningMaterial(models.Model):
     week = models.ForeignKey(CurriculumWeek, on_delete=models.CASCADE, related_name='materials', blank=True, null=True)
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    file = models.FileField(upload_to='learning_materials/', blank=True, null=True)
+    file = models.FileField(
+        upload_to='learning_materials/', blank=True, null=True,
+        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'zip', 'mp4', 'jpg', 'jpeg', 'png', 'txt'])],
+    )
     link = models.URLField(blank=True, help_text="External link (e.g. YouTube, Google Doc)")
     uploaded_by = models.ForeignKey('Mentor', on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

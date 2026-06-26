@@ -134,7 +134,7 @@ CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='', cast=lambda v:
 CSP_DEFAULT_SRC = ("'self'",)
 CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdnjs.cloudflare.com')
 CSP_FONT_SRC = ("'self'", 'https://fonts.gstatic.com', 'https://cdnjs.cloudflare.com')
-CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", 'https://cdnjs.cloudflare.com')
+CSP_SCRIPT_SRC = ("'self'", 'https://cdnjs.cloudflare.com')
 CSP_CONNECT_SRC = ("'self'",)
 CSP_IMG_SRC = ("'self'", 'data:', 'blob:')
 CSP_FRAME_SRC = ("'self'",)

@@ -143,6 +143,7 @@ def login_view(request):
         if student and student.check_password(password):
             if not student.is_active:
                 return redirect(f"{reverse('login')}?suspended=1")
+            request.session.cycle_key()
             request.session['student_pk'] = student.pk
             return redirect('dashboard')
 
@@ -322,9 +323,6 @@ def payment_callback(request):
         messages.error(request, "We could not find that payment record.")
         return redirect('login')
 
-    # Log the student back in via session so they land on their dashboard
-    request.session['student_pk'] = payment.student.pk
-
     result = paystack.verify_transaction(reference)
 
     if result.get('status') and result.get('data', {}).get('status') == 'success':
@@ -338,13 +336,13 @@ def payment_callback(request):
             payment.paid_at = timezone.now()
         payment.amount = data.get('amount', 0) / 100  # pesewas -> GHS
         payment.save()
-        messages.success(request, "Payment successful! Your dashboard has been updated.")
+        messages.success(request, "Payment successful! Please log in to view your updated dashboard.")
     else:
         payment.status = 'failed'
         payment.save()
         messages.error(request, "Payment could not be verified. If you were charged, please contact support.")
 
-    return redirect('dashboard')
+    return redirect('login')
 
 
 @require_login
@@ -436,6 +434,10 @@ def submit_assignment(request, student, week_id):
             messages.error(request, "Please provide a link to your submission (e.g. GitHub repo URL).")
             return redirect('course_outline')
 
+        if not (submission_url.startswith('http://') or submission_url.startswith('https://')):
+            messages.error(request, "Please provide a valid URL starting with http:// or https://.")
+            return redirect('course_outline')
+
         assignment, _ = Assignment.objects.get_or_create(student=student, week=week)
         assignment.submission_url = submission_url
         assignment.notes = notes
@@ -514,6 +516,9 @@ def mentor_login(request):
         mentor = Mentor.objects.filter(mentor_id=mentor_id).first()
 
         if mentor and mentor.check_password(password):
+            if not mentor.is_active:
+                return redirect(f"{reverse('mentor_login')}?suspended=1")
+            request.session.cycle_key()
             request.session['mentor_pk'] = mentor.pk
             return redirect('mentor_dashboard')
 
@@ -524,7 +529,7 @@ def mentor_login(request):
 
 
 def mentor_logout(request):
-    request.session.pop('mentor_pk', None)
+    request.session.flush()
     return redirect('mentor_login')
 
 
@@ -691,6 +696,7 @@ def mentor_material_delete(request, mentor, material_id):
 # Mentor change password
 # ---------------------------------------------------------------------------
 
+@ratelimit(key='user', rate='5/m', method='POST', block=True)
 @require_login
 def student_settings(request, student):
     if request.method == 'POST':
@@ -718,6 +724,7 @@ def mentor_settings(request, mentor):
     return render(request, 'core/mentor_settings.html', {'mentor': mentor})
 
 
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
 @require_mentor_login
 def mentor_change_password(request, mentor):
     if request.method == 'POST':
@@ -850,7 +857,7 @@ def admin_assignment_history(request):
 # Custom admin dashboard
 # ---------------------------------------------------------------------------
 
-@ratelimit(key='ip', rate='5/m', method='POST')
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def admin_login(request):
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
