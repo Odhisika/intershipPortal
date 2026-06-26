@@ -20,6 +20,9 @@ media/attachment_letters/
 media/certificates/
 media/learning_materials/
 
+# Cyber security lab guide (sensitive content)
+cyber.md
+
 # OS trash
 .DS_Store
 Thumbs.db
