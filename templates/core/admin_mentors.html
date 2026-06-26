@@ -1,0 +1,74 @@
+{% extends "core/admin_base.html" %}
+{% load static %}
+{% block title %}Mentors - LiG Admin{% endblock %}
+{% block admin_content %}
+
+    <h1 style="margin-top:32px; font-size:28px;">Mentors</h1>
+    <div class="welcome-meta">
+      <span>Create mentor accounts and assign them to one or more courses. A mentor sees every student enrolled in any of their assigned courses, across all cohorts. Credentials are emailed automatically.</span>
+    </div>
+
+    <section class="admin-capacity">
+      <h3 style="margin-bottom:16px;">Add a Mentor</h3>
+      <form method="post" class="capacity-form" style="border-top:none; padding-top:0;">
+        {% csrf_token %}
+        <div class="form-row">
+          <div class="form-group">
+            <label for="full_name">Full Name</label>
+            <input type="text" id="full_name" name="full_name" placeholder="e.g. Kwame Boateng" required>
+          </div>
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" placeholder="mentor@email.com" required>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:16px;">
+          <label>Assign Courses</label>
+          <div style="display:flex; flex-wrap:wrap; gap:16px; margin-top:6px;">
+            {% for c in courses %}
+            <label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#0f172a; text-transform:none; font-weight:500;">
+              <input type="checkbox" name="courses" value="{{ c.id }}" style="width:auto;">
+              {{ c.name }}
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Mentor &amp; Send Credentials</button>
+      </form>
+    </section>
+
+    <section class="admin-table-section">
+      <h3>All Mentors</h3>
+      <div class="history-table-wrapper">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Mentor ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Courses</th>
+              <th>Students</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for mentor in mentors %}
+            <tr>
+              <td>{{ mentor.mentor_id }}</td>
+              <td>{{ mentor.full_name }}</td>
+              <td>{{ mentor.email }}</td>
+              <td>
+                {% for c in mentor.courses.all %}{{ c.name }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}
+              </td>
+              <td>{{ mentor.students.count }}</td>
+              <td>{{ mentor.created_at|date:"M d, Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" style="text-align:center; padding:24px;">No mentors yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+{% endblock %}

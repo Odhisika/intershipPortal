@@ -1,0 +1,75 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Attendance Approval - Mentor Portal{% endblock %}
+{% block content %}
+
+<div class="admin-layout">
+  <header class="admin-header">
+    <div class="container admin-header-inner">
+      <div class="admin-logo"><img src="{% static 'images/logo.jpg' %}" alt="LiG" class="logo-img-header"> <span class="admin-logo-sub">Mentor Portal</span></div>
+      <a href="{% url 'mentor_logout' %}" class="btn btn-outline" style="border-color:rgba(255,255,255,0.3); color:#fff;">Log Out</a>
+    </div>
+  </header>
+
+  <div class="container">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'success' }}" style="max-width:none; margin:24px 0 0;">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    {% include "core/mentor_nav.html" with active="attendance" %}
+
+    <h1 style="margin-top:32px; font-size:28px;">Attendance Approval</h1>
+    <div class="welcome-meta">
+      <span>Approve or reject pending check-in requests from your students.</span>
+    </div>
+
+    <div class="admin-table-section">
+      {% if pending_records %}
+      <div class="history-table-wrapper">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Student</th>
+              <th>Week</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in pending_records %}
+            <tr>
+              <td>{{ r.date|date:"M d, Y" }}</td>
+              <td>{{ r.student.full_name }} ({{ r.student.student_id }})</td>
+              <td>{% if r.week %}Week {{ r.week.week_number }}{% else %}-{% endif %}</td>
+              <td style="white-space:nowrap;">
+                <form method="post" action="{% url 'mentor_attendance_approve' r.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-primary" style="padding:6px 14px; font-size:13px;">
+                    <i class="fa-solid fa-check"></i> Approve
+                  </button>
+                </form>
+                <form method="post" action="{% url 'mentor_attendance_reject' r.id %}" style="display:inline; margin-left:6px;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-outline" style="padding:6px 14px; font-size:13px; border-color:#fca5a5; color:#dc2626;">
+                    <i class="fa-solid fa-xmark"></i> Reject
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="fa-solid fa-calendar-check"></i>
+        <p>No pending attendance requests.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

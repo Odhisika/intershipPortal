@@ -1,0 +1,29 @@
+{% extends "core/admin_base.html" %}
+{% load static %}
+{% block title %}Admin Dashboard - LuckyTech Innovation Ground{% endblock %}
+{% block admin_content %}
+
+    <section class="admin-stats">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-user-plus"></i></div>
+        <div class="stat-value">{{ total_registered }}</div>
+        <div class="stat-label">Total Registered</div>
+      </div>
+      <div class="stat-card stat-success">
+        <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="stat-value">{{ total_paid_students }}</div>
+        <div class="stat-label">Paid &amp; Confirmed</div>
+      </div>
+      <div class="stat-card stat-warning">
+        <div class="stat-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+        <div class="stat-value">{{ pending_students }}</div>
+        <div class="stat-label">Pending Payment</div>
+      </div>
+      <div class="stat-card stat-revenue">
+        <div class="stat-icon"><i class="fa-solid fa-sack-dollar"></i></div>
+        <div class="stat-value">GHS {{ total_revenue }}</div>
+        <div class="stat-label">Total Revenue</div>
+      </div>
+    </section>
+
+{% endblock %}

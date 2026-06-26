@@ -1,0 +1,77 @@
+{% extends "core/admin_base.html" %}
+{% load static %}
+{% block title %}Students - LiG Admin{% endblock %}
+{% block admin_content %}
+
+<h1 style="margin-top:32px; font-size:28px;">Registered Students</h1>
+<div class="welcome-meta">
+  <span>View and filter all registered students.</span>
+</div>
+
+<!-- Filters -->
+<form method="get" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; margin-bottom:24px;">
+  <div class="form-group" style="min-width:200px;">
+    <label for="cohort">Cohort</label>
+    <select id="cohort" name="cohort" onchange="this.form.submit()">
+      <option value="">All Cohorts</option>
+      {% for c in cohorts %}
+        <option value="{{ c.id }}" {% if filter_cohort == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-group" style="min-width:180px;">
+    <label for="status">Status</label>
+    <select id="status" name="status" onchange="this.form.submit()">
+      <option value="">All</option>
+      <option value="approved" {% if filter_status == 'approved' %}selected{% endif %}>Confirmed</option>
+      <option value="pending" {% if filter_status == 'pending' %}selected{% endif %}>Pending</option>
+    </select>
+  </div>
+</form>
+
+<div class="admin-table-section">
+  <div class="history-table-wrapper">
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Student ID</th>
+          <th>Name</th>
+          <th>Cohort</th>
+          <th>Department</th>
+          <th>Email</th>
+          <th>Total Paid (GHS)</th>
+          <th>Status</th>
+          <th>Registered On</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students %}
+        <tr>
+          <td>{{ student.student_id }}</td>
+          <td>{{ student.full_name }}</td>
+          <td>{{ student.cohort.name|default:"-" }}</td>
+          <td>{{ student.get_department_display }}</td>
+          <td>{{ student.email }}</td>
+          <td>{{ student.total_paid }}</td>
+          <td>
+            {% if student.attachment_status == "APPROVED" %}
+              <span class="status-pill status-success">Confirmed</span>
+            {% else %}
+              <span class="status-pill status-pending">Pending</span>
+            {% endif %}
+          </td>
+          <td>{{ student.created_at|date:"M d, Y" }}</td>
+          <td><a href="{% url 'admin_student_detail' student.id %}" class="btn btn-primary" style="padding:6px 14px; font-size:12px;">View</a></td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="9" style="text-align:center; padding:24px;">No students found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

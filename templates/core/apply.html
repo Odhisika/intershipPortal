@@ -1,0 +1,132 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Apply - LuckyTech Innovation Ground{% endblock %}
+{% block content %}
+
+<section class="form-section">
+  <div class="container">
+    <div class="form-card">
+      <h2>Application Form</h2>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags|default:'success' }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      {% if request.GET.success == '1' %}
+      <div class="modal-overlay">
+        <div class="modal-card">
+          <div class="modal-icon"><i class="fa-solid fa-circle-check"></i></div>
+          <h3>Application Submitted!</h3>
+          <p>
+            Your application has been submitted successfully. Your Student ID and
+            password have been generated and sent to your email. Use them to log
+            in to your portal and complete your payment.
+          </p>
+          <div class="modal-actions">
+            <a href="{% url 'home' %}" class="btn btn-outline">Return Home</a>
+            <a href="{% url 'login' %}" class="btn btn-primary">Go to Login</a>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if not config.is_registration_open %}
+        <div class="registration-closed">
+          <div class="registration-closed-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+          <h3>Oops! Registration Closed</h3>
+          <p>
+            We've reached our intake capacity for this cohort. Thank you for your
+            interest &mdash; please check back for the next intake announcement.
+          </p>
+        </div>
+      {% else %}
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-row">
+          <div class="form-group">
+            <label for="full_name">Full Name</label>
+            <input type="text" id="full_name" name="full_name" placeholder="John Mensah" required>
+          </div>
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" placeholder="john@university.edu" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" name="phone" placeholder="+233 ..." required>
+          </div>
+          <div class="form-group">
+            <label for="institution">Academic Institution</label>
+            <input type="text" id="institution" name="institution" placeholder="University of Science &amp; Tech" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="programme">Programme of Study</label>
+            <input type="text" id="programme" name="programme" placeholder="B.Sc. Computer Science" required>
+          </div>
+          <div class="form-group">
+            <label for="level">Current Level</label>
+            <select id="level" name="level" required>
+              <option value="">Select level</option>
+              <option value="100">100 Level</option>
+              <option value="200">200 Level</option>
+              <option value="300">300 Level</option>
+              <option value="400">400 Level</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="courses">Target Course(s)</label>
+            <select id="courses" name="courses" multiple required>
+              <option value="">Select course(s)</option>
+              <option value="software_development">Software Development</option>
+              <option value="ui_ux_design">UI/UX Design</option>
+              <option value="networking">Networking</option>
+              <option value="cybersecurity">Cybersecurity</option>
+              <option value="it_support">IT Support</option>
+            </select>
+            <small style="display:block; margin-top:4px; color:#94a3b8;">Hold Ctrl/Cmd to select multiple courses</small>
+          </div>
+          <div class="form-group">
+            <label for="duration">Duration (Dates)</label>
+            <input type="text" id="duration" name="duration" placeholder="e.g. June - Nov 2024" required>
+          </div>
+        </div>
+
+        <label for="attachment_letter" style="display:block; font-size:11px; font-weight:700; letter-spacing:0.06em; color:#94a3b8; text-transform:uppercase; margin-bottom:8px;">
+          Attachment Letter
+        </label>
+        <div class="file-drop">
+          <div class="file-drop-icon"><i class="fa-solid fa-file-circle-check"></i></div>
+          <label for="attachment_letter" id="file-label" style="cursor:pointer; font-size:14px; color:#cbd5e1; text-transform:none; letter-spacing:normal; font-weight:400;">
+            Drag and drop or <span class="browse">Browse</span>
+          </label>
+          <input type="file" id="attachment_letter" name="attachment_letter" accept="application/pdf" style="display:none;">
+          <small>PDF format required</small>
+        </div>
+        <script>
+          document.getElementById('attachment_letter').addEventListener('change', function() {
+            var label = document.getElementById('file-label');
+            label.textContent = this.files[0] ? this.files[0].name : 'Drag and drop or Browse';
+          });
+        </script>
+
+        <div class="form-submit">
+          <button type="submit" class="btn btn-primary">Submit Application</button>
+        </div>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

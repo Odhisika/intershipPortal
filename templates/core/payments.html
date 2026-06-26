@@ -1,0 +1,49 @@
+{% extends "core/portal_base.html" %}
+{% block title %}Payments - LiG Student Portal{% endblock %}
+{% block nav_payments %}active{% endblock %}
+
+{% block portal_content %}
+
+<h1 style="font-size:28px; margin-bottom:8px;">Make a Payment</h1>
+<div class="welcome-meta">
+  <span>
+    A minimum of {{ config.required_payment_percentage }}% (GHS {{ min_payment }}) of your
+    GHS {{ full_balance }} attachment fee is required to confirm your placement.
+  </span>
+</div>
+
+<div class="payment-wrapper">
+  <div class="payment-card">
+    <h3><i class="fa-solid fa-bolt icon"></i> Quick Payment</h3>
+
+    <form method="post">
+      {% csrf_token %}
+      <label class="field-label" for="amount">Payment Amount (GHS)</label>
+      <div class="payment-amount">
+        <span class="currency">GHS</span>
+        <input type="number" id="amount" name="amount" value="{{ min_payment }}" step="0.01" min="1" required>
+      </div>
+      <div class="payment-quick-links">
+        <a href="#" onclick="document.getElementById('amount').value={{ min_payment }};return false;">Pay Minimum (GHS {{ min_payment }})</a>
+        <a href="#" class="full" onclick="document.getElementById('amount').value={{ full_balance }};return false;">Pay Full Balance (GHS {{ full_balance }})</a>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">
+        Pay with Paystack <i class="fa-solid fa-chevron-right"></i>
+      </button>
+
+      <p class="payment-note">
+        Payments are securely processed by Paystack. Transaction fees may apply based on provider.
+      </p>
+    </form>
+  </div>
+
+  <div class="billing-card">
+    <h3><i class="fa-solid fa-headset"></i> Billing Support</h3>
+    <p>
+      Having issues with your payment? Our office is available Mon-Fri, 8AM - 5PM.
+    </p>
+  </div>
+</div>
+
+{% endblock %}

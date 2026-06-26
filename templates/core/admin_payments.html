@@ -1,0 +1,110 @@
+{% extends "core/admin_base.html" %}
+{% load static %}
+{% block title %}Payments - LiG Admin{% endblock %}
+{% block admin_content %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:32px;">
+  <h1 style="font-size:28px; margin:0;">Payments</h1>
+  <div style="font-size:18px; font-weight:700; color:#7c3aed;">
+    Total Revenue: GHS {{ total_revenue }}
+  </div>
+</div>
+<div class="welcome-meta">
+  <span>View payment history, track defaulters, and filter by period.</span>
+</div>
+
+<!-- Filters -->
+<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px;">
+  <a href="{% url 'admin_payments' %}?filter=all"
+     class="btn {% if filter == 'all' %}btn-primary{% else %}btn-outline{% endif %}"
+     style="border-color:var(--color-border); padding:8px 18px; font-size:13px;">All</a>
+  <a href="{% url 'admin_payments' %}?filter=week"
+     class="btn {% if filter == 'week' %}btn-primary{% else %}btn-outline{% endif %}"
+     style="border-color:var(--color-border); padding:8px 18px; font-size:13px;">This Week</a>
+  <a href="{% url 'admin_payments' %}?filter=month"
+     class="btn {% if filter == 'month' %}btn-primary{% else %}btn-outline{% endif %}"
+     style="border-color:var(--color-border); padding:8px 18px; font-size:13px;">This Month</a>
+</div>
+
+<!-- Defaulters -->
+<section class="admin-capacity">
+  <h3 style="margin-bottom:16px;">Defaulters &mdash; Students Below Required Payment</h3>
+  {% if defaulters %}
+  <div class="history-table-wrapper">
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Student ID</th>
+          <th>Name</th>
+          <th>Cohort</th>
+          <th>Total Paid (GHS)</th>
+          <th>Required (GHS)</th>
+          <th>Outstanding</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in defaulters %}
+        <tr>
+          <td>{{ s.student_id }}</td>
+          <td>{{ s.full_name }}</td>
+          <td>{{ s.cohort.name|default:"-" }}</td>
+          <td>{{ s.total_paid }}</td>
+          <td>{{ s.config.required_amount }}</td>
+          <td style="color:#dc2626; font-weight:700;">GHS {{ s.outstanding_balance }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center; padding:24px;">No defaulters!</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fa-solid fa-circle-check" style="color:#16a34a;"></i>
+    <p>All students have met the required payment.</p>
+  </div>
+  {% endif %}
+</section>
+
+<!-- Payment History -->
+<section class="admin-table-section">
+  <h3>Payment History</h3>
+  <div class="history-table-wrapper">
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Student</th>
+          <th>Amount (GHS)</th>
+          <th>Status</th>
+          <th>Channel</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td style="font-size:12px;">{{ p.reference }}</td>
+          <td>{{ p.student.full_name }}</td>
+          <td>{{ p.amount }}</td>
+          <td>
+            {% if p.status == "success" %}
+              <span class="status-pill status-success">Success</span>
+            {% elif p.status == "failed" %}
+              <span class="status-pill status-failed">Failed</span>
+            {% else %}
+              <span class="status-pill status-pending">Pending</span>
+            {% endif %}
+          </td>
+          <td>{{ p.channel|default:"-" }}</td>
+          <td>{{ p.created_at|date:"M d, Y H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center; padding:24px;">No payments found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% endblock %}

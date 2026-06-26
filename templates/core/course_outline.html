@@ -1,0 +1,125 @@
+{% extends "core/portal_base.html" %}
+{% load static %}
+{% block title %}Course Outline - LiG Student Portal{% endblock %}
+{% block nav_course %}active{% endblock %}
+
+{% block portal_content %}
+<h1 style="font-size:28px; margin-bottom:8px;">Course Outline</h1>
+<div class="welcome-meta">
+  {% if courses %}
+    <span>Your courses. Weeks unlock progressively as you complete each one.</span>
+  {% else %}
+    <span>Your curriculum hasn't been assigned yet. Please contact your administrator.</span>
+  {% endif %}
+</div>
+
+{% if courses|length > 1 %}
+<div class="course-tabs" style="margin-bottom:24px;">
+  {% for c in courses %}
+    <a href="{% url 'course_outline' %}?course={{ c.id }}"
+       class="course-tab {% if course.id == c.id %}active{% endif %}">
+      {{ c.name }}
+    </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if course %}
+<div class="roadmap-download">
+  <div>
+    <h3><i class="fa-solid fa-book-open"></i> {{ course.name }}</h3>
+    <p>{{ course.description }}</p>
+  </div>
+</div>
+{% endif %}
+
+{% if student.is_programme_complete %}
+<div class="roadmap-download" style="background: var(--color-gradient);">
+  <div>
+    <h3 style="color:#0f172a;"><i class="fa-solid fa-award" style="color:#0f172a;"></i>
+      {% if certificate %}Certificate Ready!{% else %}Programme Complete{% endif %}
+    </h3>
+    <p style="color:#0f172a;">
+      {% if certificate %}
+        Download your certificate of completion.
+      {% else %}
+        Your programme is complete. The admin will issue your certificate shortly.
+      {% endif %}
+    </p>
+  </div>
+  {% if certificate %}
+    <a href="{% url 'download_certificate' %}" class="btn" style="background:#0f172a; color:#fff;">
+      <i class="fa-solid fa-download"></i> Download Certificate
+    </a>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="outline-list">
+  {% for item in week_data %}
+  {% with week=item.week assignment=item.assignment is_open=item.is_open is_completed=item.is_completed %}
+  <div class="outline-card" style="{% if not is_open %}opacity:0.55;{% endif %}">
+    <div class="outline-card-header">
+      <div>
+        <span class="module">
+          Week {{ week.week_number }} &middot; {{ week.title }}
+          {% if not is_open %}<i class="fa-solid fa-lock" style="color:#94a3b8; margin-left:8px;"></i>{% endif %}
+          {% if is_completed %}<i class="fa-solid fa-circle-check" style="color:#22d3ee; margin-left:8px;"></i>{% endif %}
+        </span>
+        <p class="module-desc">{{ week.description }}</p>
+      </div>
+      {% if is_completed %}
+        <span class="status status-reviewed">COMPLETED</span>
+      {% elif assignment and assignment.status == "reviewed" %}
+        <span class="status status-reviewed">REVIEWED</span>
+      {% elif assignment and assignment.status == "submitted" %}
+        <span class="status status-submitted">SUBMITTED</span>
+      {% elif is_open %}
+        <span class="status status-pending-week">PENDING</span>
+      {% else %}
+        <span class="status status-pending-week">LOCKED</span>
+      {% endif %}
+    </div>
+
+    {% if week.milestone and is_open %}
+    <div class="milestone-box">
+      <strong>Weekend Milestone:</strong> {{ week.milestone }}
+    </div>
+    {% endif %}
+
+    {% if is_open %}
+    <form method="post" action="{% url 'submit_assignment' week.id %}" class="assignment-form">
+      {% csrf_token %}
+      <div class="form-row" style="margin-bottom:12px;">
+        <div class="form-group">
+          <label>Submission Link (GitHub repo / live demo)</label>
+          <input type="url" name="submission_url" placeholder="https://github.com/username/project"
+                 value="{{ assignment.submission_url|default:'' }}">
+        </div>
+        <div class="form-group">
+          <label>Notes (optional)</label>
+          <input type="text" name="notes" placeholder="Any comments about your submission"
+                 value="{{ assignment.notes|default:'' }}">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">
+        {% if assignment and assignment.submission_url %}Update Submission{% else %}Submit Assignment{% endif %}
+      </button>
+    </form>
+
+    {% if assignment and assignment.feedback %}
+    <div class="feedback-box">
+      <strong><i class="fa-solid fa-comment-dots"></i> Mentor Feedback:</strong> {{ assignment.feedback }}
+    </div>
+    {% endif %}
+    {% endif %}
+  </div>
+  {% endwith %}
+  {% empty %}
+  <div class="empty-state">
+    <i class="fa-solid fa-book-open"></i>
+    <p>The curriculum hasn't been published yet. Check back soon!</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

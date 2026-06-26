@@ -1,0 +1,101 @@
+{% extends "core/portal_base.html" %}
+{% block title %}Dashboard - LiG Student Portal{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block portal_content %}
+<h1>Welcome , {{ student.first_name }}</h1>
+<div class="welcome-meta">
+  <span>Your attachment journey is {{ student.progress_percentage }}% complete.</span>
+  {% if student.has_paid_required_amount %}
+    <span class="badge badge-track">On Track</span>
+  {% else %}
+    <span class="badge badge-track" style="background:#fef3c7; color:#b45309;">Payment Required</span>
+  {% endif %}
+</div>
+
+<div class="dashboard-grid">
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <div class="card-icon"><i class="fa-solid fa-certificate"></i></div>
+      {% if student.attachment_status == "APPROVED" %}
+        <span class="badge-approved">APPROVED</span>
+      {% else %}
+        <span class="badge-balance">PENDING</span>
+      {% endif %}
+    </div>
+    <h3>Attachment Status</h3>
+    <div class="meta">
+      {% if student.attachment_status == "APPROVED" %}
+        Your placement is confirmed.
+      {% else %}
+        Complete payment of at least GHS {{ config.required_amount }} to confirm your placement.
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <div class="card-icon"><i class="fa-solid fa-wallet"></i></div>
+      <span class="badge-balance">BALANCE</span>
+    </div>
+    <h3>Payment Status</h3>
+    <div class="meta">Total Fee: GHS {{ config.attachment_fee }}</div>
+    <div class="meta">Total Paid: GHS {{ student.total_paid }}</div>
+    <div class="meta">Outstanding: GHS {{ student.outstanding_balance }}</div>
+    {% if student.outstanding_balance > 0 %}
+      <a href="{% url 'payments' %}" class="btn btn-primary" style="margin-top:16px; display:inline-block;">Make Payment</a>
+    {% endif %}
+  </div>
+
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <div class="card-icon"><i class="fa-solid fa-calendar-check"></i></div>
+      <span class="badge-approved">{{ student.attendance_percentage }}%</span>
+    </div>
+    <h3>Attendance</h3>
+    <div class="meta">Your overall attendance rate so far.</div>
+    <a href="{% url 'attendance' %}" class="btn btn-primary" style="margin-top:16px; display:inline-block;">Check In / View Record</a>
+  </div>
+
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <div class="card-icon"><i class="fa-solid fa-award"></i></div>
+      {% if certificate %}
+        <span class="badge-approved">READY</span>
+      {% elif student.is_programme_complete %}
+        <span class="badge-pending">PENDING</span>
+      {% else %}
+        <span class="badge-balance">LOCKED</span>
+      {% endif %}
+    </div>
+    <h3>Certificate</h3>
+    <div class="meta">
+      {% if certificate %}
+        Congratulations! Your certificate is ready to download.
+      {% elif student.is_programme_complete %}
+        Your programme is complete. The admin will issue your certificate shortly.
+      {% else %}
+        Complete all payments and weekly assignments to unlock your certificate.
+      {% endif %}
+    </div>
+    {% if certificate %}
+      <a href="{% url 'download_certificate' %}" class="btn btn-primary" style="margin-top:16px; display:inline-block;">Download Certificate</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if announcements %}
+<h3 id="announcements" style="margin-top:32px; margin-bottom:16px; font-size:20px; font-weight:700;">Announcements</h3>
+<div class="announcement-list">
+  {% for announcement in announcements %}
+    <div class="announcement-item">
+      <div class="announcement-header">
+        <span class="announcement-title">{{ announcement.title }}</span>
+        <span class="announcement-date">{{ announcement.created_at|date:"M d, Y" }}</span>
+      </div>
+      <p>{{ announcement.body }}</p>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "core/admin_base.html" %}
+{% load static %}
+{% block title %}Assignments - LiG Admin{% endblock %}
+{% block admin_content %}
+
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:32px;">
+      <h1 style="font-size:28px; margin:0;">Assignment Submissions</h1>
+      <a href="{% url 'admin_assignment_history' %}" class="btn btn-outline" style="border-color:var(--color-border);">
+        <i class="fa-solid fa-clock-rotate-left"></i> View History
+      </a>
+    </div>
+    <div class="welcome-meta">
+      <span>Review student submissions and leave feedback.</span>
+    </div>
+
+    {% for assignment in assignments %}
+    <div class="outline-card">
+      <div class="outline-card-header">
+        <div>
+          <span class="module">{{ assignment.student.full_name }} ({{ assignment.student.student_id }}) &middot; Week {{ assignment.week.week_number }}</span>
+          <p class="module-desc">{{ assignment.week.title }}</p>
+          <p class="module-desc">
+            <a href="{{ assignment.submission_url }}" target="_blank" rel="noopener" style="color:var(--color-accent);">
+              {{ assignment.submission_url }}
+            </a>
+          </p>
+          {% if assignment.notes %}<p class="module-desc">Notes: {{ assignment.notes }}</p>{% endif %}
+        </div>
+        {% if assignment.status == "reviewed" %}
+          <span class="status status-reviewed">REVIEWED</span>
+        {% else %}
+          <span class="status status-submitted">SUBMITTED</span>
+        {% endif %}
+      </div>
+
+      <form method="post" class="assignment-form">
+        {% csrf_token %}
+        <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>Feedback</label>
+          <input type="text" name="feedback" placeholder="Add feedback for this submission" value="{{ assignment.feedback|default:'' }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Save Feedback</button>
+      </form>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+      <i class="fa-solid fa-inbox"></i>
+      <p>No assignment submissions yet.</p>
+    </div>
+    {% endfor %}
+
+{% endblock %}

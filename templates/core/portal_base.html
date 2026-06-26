@@ -1,0 +1,84 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="portal-layout">
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo"><img src="{% static 'images/logo.jpg' %}" alt="LiG" class="logo-img-sidebar"></div>
+      <div class="logo-subtitle">Student Portal</div>
+      <button class="sidebar-close" onclick="toggleSidebar()" aria-label="Close menu">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="{% url 'dashboard' %}" class="{% block nav_dashboard %}{% endblock %}">
+        <i class="fa-solid fa-table-cells-large"></i> Dashboard
+      </a>
+      <a href="{% url 'payments' %}" class="{% block nav_payments %}{% endblock %}">
+        <i class="fa-solid fa-credit-card"></i> Payments
+      </a>
+      <a href="{% url 'payment_history' %}" class="{% block nav_history %}{% endblock %}">
+        <i class="fa-solid fa-clock-rotate-left"></i> Payment History
+      </a>
+      <a href="{% url 'course_outline' %}" class="{% block nav_course %}{% endblock %}">
+        <i class="fa-solid fa-graduation-cap"></i> Course Outline
+      </a>
+      <a href="{% url 'attendance' %}" class="{% block nav_attendance %}{% endblock %}">
+        <i class="fa-solid fa-calendar-check"></i> Attendance
+      </a>
+      <a href="{% url 'student_materials' %}" class="{% block nav_materials %}{% endblock %}">
+        <i class="fa-solid fa-folder-open"></i> Materials
+      </a>
+      <a href="{% url 'student_settings' %}" class="{% block nav_settings %}{% endblock %}">
+        <i class="fa-solid fa-gear"></i> Settings
+      </a>
+    </nav>
+
+    <a href="{% url 'logout' %}" class="sidebar-logout" style="text-align:center; display:block; text-decoration:none;">Log Out</a>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Open menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <div class="topbar-left">
+        <a href="{% url 'dashboard' %}#announcements" style="color:#94a3b8; text-decoration:none;">
+          <i class="fa-regular fa-bell topbar-icon"></i>
+        </a>
+        <a href="{% url 'student_settings' %}" style="color:#94a3b8; text-decoration:none;">
+          <i class="fa-solid fa-gear topbar-icon"></i>
+        </a>
+      </div>
+      <div class="topbar-user">
+        <div class="user-info">
+          <div class="user-name">{{ student.full_name }}</div>
+          <div class="user-id">{{ student.student_id }}</div>
+        </div>
+        <div class="avatar">{{ student.full_name|first|upper }}</div>
+      </div>
+    </div>
+
+    <div class="content-inner">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags|default:'success' }}" style="max-width:none; margin:0 0 24px 0;">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+      {% block portal_content %}{% endblock %}
+    </div>
+  </main>
+</div>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+</script>
+
+{% endblock %}

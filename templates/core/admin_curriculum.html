@@ -1,0 +1,44 @@
+{% extends "core/admin_base.html" %}
+{% load static core_extras %}
+{% block title %}Curriculum - LiG Admin{% endblock %}
+{% block admin_content %}
+
+    <h1 style="margin-top:32px; font-size:28px;">Curriculum</h1>
+    <div class="welcome-meta">
+      <span>View curriculum by course. Mentors manage the weekly content.</span>
+    </div>
+
+    <div class="course-tabs">
+      {% for c in courses %}
+        <a href="{% url 'admin_curriculum_course' c.id %}" class="course-tab {% if course.id == c.id %}active{% endif %}">
+          {{ c.name }}
+        </a>
+      {% endfor %}
+    </div>
+
+    {% if course %}
+    <h3 style="margin:24px 0 16px; font-size:18px;">{{ course.name }} &mdash; {{ course.duration_weeks }} Weeks</h3>
+
+    {% for week in weeks %}
+    <div class="outline-card" style="padding:20px 24px;">
+      <div class="outline-card-header" style="margin-bottom:4px;">
+        <div>
+          <span class="module">Week {{ week.week_number }} &middot; {{ week.title }}</span>
+          {% if week.description %}<p class="module-desc" style="margin-top:8px;">{{ week.description }}</p>{% endif %}
+        </div>
+      </div>
+      {% if week.milestone %}
+      <div class="milestone-box" style="margin-top:12px;">
+        <strong>Weekend Milestone:</strong> {{ week.milestone }}
+      </div>
+      {% endif %}
+    </div>
+    {% empty %}
+    <div class="empty-state">
+      <i class="fa-solid fa-book-open"></i>
+      <p>This course doesn't have any curriculum weeks yet.</p>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+{% endblock %}

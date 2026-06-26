@@ -1,0 +1,70 @@
+{% extends "core/portal_base.html" %}
+{% load static %}
+{% block title %}Learning Materials - LiG Student Portal{% endblock %}
+{% block nav_course %}active{% endblock %}
+
+{% block portal_content %}
+<h1 style="font-size:28px; margin-bottom:8px;">Learning Materials</h1>
+<div class="welcome-meta">
+  <span>Supplementary materials shared by your mentors.</span>
+</div>
+
+{% if payment_required %}
+<div class="empty-state">
+  <i class="fa-solid fa-lock" style="color:#f59e0b;"></i>
+  <p>Learning materials are locked until you have paid the required amount (GHS {{ student.config.required_amount }}).</p>
+  <a href="{% url 'payments' %}" class="btn btn-primary" style="margin-top:16px;">Make a Payment</a>
+</div>
+{% elif materials is not None %}
+  {% if courses|length > 1 %}
+  <div class="course-tabs" style="margin-bottom:24px;">
+    {% for c in courses %}
+      <a href="{% url 'student_materials' %}?course={{ c.id }}"
+         class="course-tab {% if course.id == c.id %}active{% endif %}">
+        {{ c.name }}
+      </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if materials %}
+  <div class="outline-list" style="max-width:100%;">
+    {% for m in materials %}
+    <div class="outline-card">
+      <div class="outline-card-header">
+        <div>
+          <span class="module">{{ m.title }}</span>
+          {% if m.week %}
+            <p class="module-desc">Week {{ m.week.week_number }} &middot; {{ m.course.name }}</p>
+          {% else %}
+            <p class="module-desc">{{ m.course.name }}</p>
+          {% endif %}
+          {% if m.description %}<p class="module-desc">{{ m.description }}</p>{% endif %}
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          {% if m.file %}
+            <a href="{{ m.file.url }}" class="btn btn-primary" style="padding:8px 16px; font-size:13px;" download>
+              <i class="fa-solid fa-download"></i> Download
+            </a>
+          {% endif %}
+          {% if m.link %}
+            <a href="{{ m.link }}" target="_blank" rel="noopener" class="btn btn-outline" style="padding:8px 16px; font-size:13px;">
+              <i class="fa-solid fa-external-link-alt"></i> Open Link
+            </a>
+          {% endif %}
+        </div>
+      </div>
+      <p class="module-desc" style="font-size:12px; color:#94a3b8; margin-top:8px;">
+        Uploaded {{ m.created_at|date:"M d, Y" }}
+      </p>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fa-solid fa-folder-open"></i>
+    <p>No learning materials have been uploaded for this course yet.</p>
+  </div>
+  {% endif %}
+{% endif %}
+{% endblock %}

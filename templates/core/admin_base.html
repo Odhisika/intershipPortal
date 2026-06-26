@@ -1,0 +1,87 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="admin-layout">
+  <div class="admin-sidebar-overlay" id="adminSidebarOverlay" onclick="toggleAdminSidebar()"></div>
+
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="sidebar-header">
+      <div class="logo"><img src="{% static 'images/logo.jpg' %}" alt="LiG" class="logo-img-sidebar"></div>
+      <div class="logo-subtitle">Management</div>
+      <button class="sidebar-close" onclick="toggleAdminSidebar()" aria-label="Close menu">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="{% url 'admin_dashboard' %}" class="{% if active == 'dashboard' %}active{% endif %}">
+        <i class="fa-solid fa-chart-line"></i> Overview
+      </a>
+      <a href="{% url 'admin_payments' %}" class="{% if active == 'payments' %}active{% endif %}">
+        <i class="fa-solid fa-sack-dollar"></i> Payments
+      </a>
+      <a href="{% url 'admin_students' %}" class="{% if active == 'students' %}active{% endif %}">
+        <i class="fa-solid fa-user-graduate"></i> Students
+      </a>
+      <a href="{% url 'admin_announcements' %}" class="{% if active == 'announcements' %}active{% endif %}">
+        <i class="fa-solid fa-bullhorn"></i> Announcements
+      </a>
+      <a href="{% url 'admin_cohorts' %}" class="{% if active == 'cohorts' %}active{% endif %}">
+        <i class="fa-solid fa-users-rectangle"></i> Cohorts
+      </a>
+      <a href="{% url 'admin_attendance_history' %}" class="{% if active == 'attendance' %}active{% endif %}">
+        <i class="fa-solid fa-calendar-check"></i> Attendance
+      </a>
+      <a href="{% url 'admin_assignment_history' %}" class="{% if active == 'assignments' %}active{% endif %}">
+        <i class="fa-solid fa-list-check"></i> Assignments
+      </a>
+      <a href="{% url 'admin_curriculum' %}" class="{% if active == 'curriculum' %}active{% endif %}">
+        <i class="fa-solid fa-book"></i> Curriculum
+      </a>
+      <a href="{% url 'admin_mentors' %}" class="{% if active == 'mentors' %}active{% endif %}">
+        <i class="fa-solid fa-user-tie"></i> Mentors
+      </a>
+      <a href="{% url 'admin_settings' %}" class="{% if active == 'settings' %}active{% endif %}">
+        <i class="fa-solid fa-gear"></i> Settings
+      </a>
+    </nav>
+
+    <a href="{% url 'admin_logout' %}" class="sidebar-logout" style="text-align:center; display:block; text-decoration:none;">Log Out</a>
+  </aside>
+
+  <main class="main-content">
+    <header class="admin-header">
+      <div class="container admin-header-inner">
+        <div style="display:flex; align-items:center; gap:16px;">
+          <button class="mobile-menu-btn" onclick="toggleAdminSidebar()" aria-label="Open menu">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="admin-logo"><img src="{% static 'images/logo.jpg' %}" alt="LiG" class="logo-img-header"> <span class="admin-logo-sub">Management</span></div>
+        </div>
+        <a href="{% url 'admin_logout' %}" class="btn btn-outline" style="border-color:rgba(255,255,255,0.3); color:#fff;">Log Out</a>
+      </div>
+    </header>
+
+    <div class="container">
+      {% include "core/admin_nav.html" with active=active %}
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags|default:'success' }}" style="max-width:none; margin:24px 0 0;">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      {% block admin_content %}{% endblock %}
+    </div>
+  </main>
+</div>
+
+<script>
+function toggleAdminSidebar() {
+  document.getElementById('adminSidebar').classList.toggle('open');
+  document.getElementById('adminSidebarOverlay').classList.toggle('show');
+}
+</script>
+
+{% endblock %}

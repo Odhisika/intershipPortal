@@ -1,0 +1,76 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Mentor Dashboard - LuckyTech Innovation Ground{% endblock %}
+{% block content %}
+
+<div class="admin-layout">
+  <header class="admin-header">
+    <div class="container admin-header-inner">
+      <div class="admin-logo"><img src="{% static 'images/logo.jpg' %}" alt="LiG" class="logo-img-header"> <span class="admin-logo-sub">Mentor Portal</span></div>
+      <a href="{% url 'mentor_logout' %}" class="btn btn-outline" style="border-color:rgba(255,255,255,0.3); color:#fff;">Log Out</a>
+    </div>
+  </header>
+
+  <div class="container">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'success' }}" style="max-width:none; margin:24px 0 0;">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    {% include "core/mentor_nav.html" with active="dashboard" %}
+
+    <h1 style="margin-top:32px; font-size:28px;">Welcome, {{ mentor.first_name }}</h1>
+    <div class="welcome-meta">
+      <span>
+        Teaching: {% for c in mentor.courses.all %}{{ c.name }}{% if not forloop.last %}, {% endif %}{% empty %}No courses assigned{% endfor %}
+        &middot; {{ students|length }} student(s) total.
+      </span>
+    </div>
+
+
+
+    <section class="admin-table-section">
+      <div class="history-table-wrapper">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Name</th>
+              <th>Course</th>
+              <th>Attendance</th>
+              <th>Assignments</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for student in students %}
+            <tr>
+              <td>{{ student.student_id }}</td>
+              <td>{{ student.full_name }}</td>
+              <td>{{ student.get_department_display }}</td>
+              <td>{{ student.attendance_percentage }}%</td>
+              <td>{{ student.assignments_completed_count }} / {{ student.course.total_weeks|default:8 }}</td>
+              <td>
+                {% if student.attachment_status == "APPROVED" %}
+                  <span class="status-pill status-success">Confirmed</span>
+                {% else %}
+                  <span class="status-pill status-pending">Pending</span>
+                {% endif %}
+              </td>
+              <td><a href="{% url 'mentor_student_detail' student.id %}" class="receipt-link">View Details &rarr;</a></td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" style="text-align:center; padding:24px;">No students assigned yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+{% endblock %}

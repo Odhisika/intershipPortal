@@ -1,0 +1,66 @@
+{% extends "core/admin_base.html" %}
+{% load static %}
+{% block title %}Settings - LiG Admin{% endblock %}
+{% block admin_content %}
+
+<h1 style="margin-top:32px; font-size:28px;">Settings</h1>
+<div class="welcome-meta">
+  <span>Manage cohort settings and admin credentials.</span>
+</div>
+
+<section class="admin-capacity">
+  <div class="capacity-info">
+    <h3>Default Cohort Capacity &mdash; {{ cohort.name }}</h3>
+    <p>
+      {{ total_paid_students }} / {{ cohort.max_students }} confirmed slots filled.
+      {% if cohort.is_full %}
+        <strong style="color:#dc2626;">Capacity reached &mdash; registration is now closed.</strong>
+      {% elif not cohort.registration_open %}
+        <strong style="color:#dc2626;">Registration manually closed.</strong>
+      {% else %}
+        <strong style="color:#16a34a;">{{ slots_remaining }} slot(s) remaining.</strong>
+      {% endif %}
+    </p>
+    <div class="capacity-bar">
+      <div class="capacity-bar-fill" style="width: {% widthratio total_paid_students cohort.max_students 100 %}%;"></div>
+    </div>
+  </div>
+
+  <form method="post" class="capacity-form">
+    {% csrf_token %}
+    <input type="hidden" name="form_type" value="cohort_settings">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="max_students">Max Students (Slots)</label>
+        <input type="number" id="max_students" name="max_students" value="{{ cohort.max_students }}" min="1" required>
+      </div>
+      <div class="form-group">
+        <label for="attachment_fee">Attachment Fee (GHS)</label>
+        <input type="number" id="attachment_fee" name="attachment_fee" value="{{ cohort.attachment_fee }}" step="0.01" min="0" required>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="required_payment_percentage">Required Payment (%)</label>
+        <input type="number" id="required_payment_percentage" name="required_payment_percentage" value="{{ cohort.required_payment_percentage }}" min="1" max="100" required>
+      </div>
+      <div class="form-group" style="display:flex; align-items:flex-end;">
+        <label style="display:flex; align-items:center; gap:10px; font-size:14px; color:#0f172a; text-transform:none; font-weight:600;">
+          <input type="checkbox" name="registration_open" {% if cohort.registration_open %}checked{% endif %} style="width:auto;">
+          Registration Open (toggle)
+        </label>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Save Settings</button>
+  </form>
+</section>
+
+<section class="admin-capacity" style="margin-top:24px;">
+  <h3 style="margin-bottom:16px;">Change Superuser Password</h3>
+  <p style="margin-bottom:16px; color:#64748b; font-size:14px;">
+    Use the <a href="/admin/password_change/" style="color:#2563eb;">Django admin</a> to change your superuser password.
+    Create new superusers with <code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:13px;">python manage.py createsuperuser</code>.
+  </p>
+</section>
+
+{% endblock %}

@@ -1,0 +1,327 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}LuckyTech Innovation Ground - Launch Your Technology Career{% endblock %}
+{% block content %}
+
+<!-- Scam Warning Banner -->
+<div class="scam-banner">
+  <div class="scam-banner-track">
+    <span class="scam-banner-text">
+      ⚠️ OFFICIAL SITE: <strong>lig.com.gh</strong> &nbsp;|&nbsp; PORTAL: <strong>internship.lig.com.gh</strong> &nbsp;|&nbsp; 
+      LuckyTech Innovation Ground will NEVER ask you to send money to a personal bank account or mobile money number. 
+      Only pay through the official internship portal. Report suspicious messages to us immediately.
+    </span>
+    <span class="scam-banner-text">
+      ⚠️ OFFICIAL SITE: <strong>lig.com.gh</strong> &nbsp;|&nbsp; PORTAL: <strong>internship.lig.com.gh</strong> &nbsp;|&nbsp; 
+      LuckyTech Innovation Ground will NEVER ask you to send money to a personal bank account or mobile money number. 
+      Only pay through the official internship portal. Report suspicious messages to us immediately.
+    </span>
+  </div>
+</div>
+
+<!-- Global Navigation Bar -->
+<nav class="nav-bar">
+  <div class="nav-container">
+    <a href="{% url 'home' %}" class="nav-logo"><img src="{% static 'images/logo.jpg' %}" alt="LiG" class="logo-img-header"></a>
+    <div class="nav-links">
+      <a href="#benefits">Overview</a>
+      <a href="#tracks">Specializations</a>
+      <a href="#timeline">Hiring Process</a>
+      <a href="#faqs">FAQs</a>
+    </div>
+    <div class="nav-actions">
+      <a href="{% url 'login' %}" class="btn-nav-outline"><span class="nav-btn-text-long">Student </span>Login</a>
+      {% if config.is_registration_open %}
+        <a href="{% url 'apply' %}" class="btn-nav-primary">Apply<span class="nav-btn-text-long"> Now</span></a>
+      {% else %}
+        <span class="btn-nav-primary" style="opacity:0.5; cursor:not-allowed;">Closed</span>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<!-- Redesigned Hero Section -->
+<header class="hero-premium">
+  <div class="container">
+    <h1>Launch Your <span class="accent">Technology Career</span></h1>
+    <p class="lead">
+      We bridge the critical gap between academic theory and high-stakes industry practice. Our programs are designed to transform talented students into industry-ready technical innovators through immersive, hands-on learning experiences.
+    </p>
+
+    <div class="hero-actions">
+      {% if config.is_registration_open %}
+        <a href="{% url 'apply' %}" class="btn btn-primary">Apply for Attachment</a>
+      {% else %}
+        <span class="btn btn-primary" style="opacity:0.5; cursor:not-allowed;">Registration Closed</span>
+      {% endif %}
+      <a href="{% url 'login' %}" class="btn btn-outline">Student Login</a>
+    </div>
+
+    {% if not config.is_registration_open %}
+      <p style="margin-top:16px; color:#dc2626; font-weight:600; font-size:14px;">
+        <i class="fa-solid fa-circle-exclamation"></i> Registration is currently closed &mdash; we've reached our intake capacity.
+      </p>
+    {% endif %}
+  </div>
+</header>
+
+<!-- Program Benefits Section -->
+<section id="benefits" class="section" style="background:#ffffff; border-top:1px solid #f1f5f9;">
+  <div class="container">
+    <h2 class="section-title" style="text-align:center;">Comprehensive Internship Benefits</h2>
+    <p class="section-subtitle" style="text-align:center; max-width:600px; margin:-20px auto 48px;">
+      Why university students choose LuckyTech Innovation Ground for their industrial attachment and professional growth.
+    </p>
+
+    <div class="benefit-card-grid">
+      <div class="benefit-card">
+        <div class="benefit-icon-wrapper cyan">
+          <i class="fa-solid fa-wallet"></i>
+        </div>
+        <h3>Paid Internship</h3>
+        <p>
+          Gain real-world experience while receiving financial compensation. All accepted student attachments are stipend-supported during their training.
+        </p>
+      </div>
+
+      <div class="benefit-card">
+        <div class="benefit-icon-wrapper indigo">
+          <i class="fa-solid fa-hourglass-half"></i>
+        </div>
+        <h3>8-Week Duration</h3>
+        <p>
+          A structured 8-week curriculum designed to fit perfectly within academic breaks, packing hands-on labs and mentor interactions.
+        </p>
+      </div>
+
+      <div class="benefit-card">
+        <div class="benefit-icon-wrapper success">
+          <i class="fa-solid fa-award"></i>
+        </div>
+        <h3>Professional Certification</h3>
+        <p>
+          Complete practical weekend assignments to unlock a verifiable digital completion certificate that validates your technical proficiency.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Specialization Tracks Section -->
+<section id="tracks" class="tracks-section">
+  <div class="container">
+    <h2 class="section-title" style="text-align:center;">Specialization Tracks</h2>
+    <p class="section-subtitle" style="text-align:center; max-width:600px; margin:-20px auto 48px;">
+      Choose a department that aligns with your career path and technical aspirations.
+    </p>
+
+    <div class="tracks-grid-premium">
+      <div class="track-card-premium">
+        <div class="track-icon"><i class="fa-solid fa-code"></i></div>
+        <h3>Software Development</h3>
+        <p>Focus on full-stack web architectures, database design, and building scalable microservices.</p>
+      </div>
+
+      <div class="track-card-premium">
+        <div class="track-icon"><i class="fa-solid fa-palette"></i></div>
+        <h3>UI/UX Design</h3>
+        <p>Design intuitive user interfaces and study modern human-centered design principles.</p>
+      </div>
+
+      <div class="track-card-premium">
+        <div class="track-icon"><i class="fa-solid fa-network-wired"></i></div>
+        <h3>Networking</h3>
+        <p>Build and maintain robust network infrastructures, focusing on speed and routing.</p>
+      </div>
+
+      <div class="track-card-premium">
+        <div class="track-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <h3>Cybersecurity</h3>
+        <p>Protect critical business systems and learn modern penetration testing protocols.</p>
+      </div>
+
+      <div class="track-card-premium">
+        <div class="track-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+        <h3>Hardware Repair</h3>
+        <p>Master physical diagnostic methods, troubleshooting, and electronic systems repair.</p>
+      </div>
+
+      <div class="track-card-premium">
+        <div class="track-icon"><i class="fa-solid fa-headset"></i></div>
+        <h3>IT Support</h3>
+        <p>Engage in enterprise-level technical troubleshooting and cloud platform administration.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Hiring Process Stepper Section -->
+<section id="timeline" class="timeline-section">
+  <div class="container">
+    <h2 class="section-title" style="text-align:center;">Recruitment Journey</h2>
+    <p class="section-subtitle" style="text-align:center; max-width:600px; margin:-20px auto 48px;">
+      Transparent hiring steps from initial application submission to program onboarding.
+    </p>
+
+    <div class="timeline-container">
+      <div class="timeline-step">
+        <div class="step-number">1</div>
+        <div class="step-title">Submit Application</div>
+        <div class="step-desc">Apply online and upload your academic attachment letter in PDF.</div>
+      </div>
+
+      <div class="timeline-step">
+        <div class="step-number">2</div>
+        <div class="step-title">Receive Credentials</div>
+        <div class="step-desc">Automatic portal credentials will be generated and emailed to you.</div>
+      </div>
+
+      <div class="timeline-step">
+        <div class="step-number">3</div>
+        <div class="step-title">Onboarding & Payment</div>
+        <div class="step-desc">Log into the student portal to lock in your attachment slot.</div>
+      </div>
+
+      <div class="timeline-step">
+        <div class="step-number">4</div>
+        <div class="step-title">Cohort Kickoff</div>
+        <div class="step-desc">Get assigned a mentor, start your coursework, and learn!</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ Accordion Section -->
+<section id="faqs" class="faq-section">
+  <div class="container">
+    <h2 class="section-title" style="text-align:center;">Frequently Asked Questions</h2>
+    <p class="section-subtitle" style="text-align:center; max-width:600px; margin:-20px auto 48px;">
+      Got questions? We have compiled answers to the most common queries from student applicants.
+    </p>
+
+    <div class="faq-accordion">
+      <div class="faq-item">
+        <button class="faq-question">
+          Are these internships paid?
+          <i class="fa-solid fa-chevron-down faq-icon"></i>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            Yes. All students admitted into our Industrial Attachment program receive a financial stipend to support them during the active learning and training phase.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          What is the duration of the attachment?
+          <i class="fa-solid fa-chevron-down faq-icon"></i>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            The internship program runs for a structured duration of 8 weeks, aligning with typical university semester breaks.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          Is a certificate awarded upon completion?
+          <i class="fa-solid fa-chevron-down faq-icon"></i>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            Yes. A verifiable professional digital certificate is generated and issued to students upon completing all weekly course assignments and meeting payment requirements.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          How do I apply for the program?
+          <i class="fa-solid fa-chevron-down faq-icon"></i>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            Click on any "Apply Now" button when registration is open. Fill in your details and upload a PDF copy of your university's official attachment letter.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          How are students matched with mentors?
+          <i class="fa-solid fa-chevron-down faq-icon"></i>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            Once admitted, you are automatically paired with an industry mentor specialized in your chosen track who oversees your weekly progress, code reviews, and milestones.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Call to Action Banner -->
+<section class="cta-banner" style="background: var(--color-gradient);">
+  <h2>Ready to Launch Your Journey?</h2>
+  {% if config.is_registration_open %}
+    <p>
+      Applications for our new cohort are open. Join successful student alumni who have accelerated their careers through LuckyTech Innovation Ground.
+    </p>
+    <a href="{% url 'apply' %}" class="btn btn-primary" style="background: #ffffff; color: var(--color-accent-dark); border: none; font-weight: 700;">Apply Now</a>
+    <span class="cta-note" style="color: #e0f2fe; margin-top: 16px;">Limited slots available &mdash; {{ config.max_students }} students maximum capacity</span>
+  {% else %}
+    <p>
+      Thank you for your interest! We have reached our capacity limit for this cohort. Please check back later for the next intake window announcement.
+    </p>
+    <span class="btn btn-primary" style="opacity:0.6; cursor:not-allowed; background: #ffffff; color: #94a3b8;">Registration Closed</span>
+  {% endif %}
+</section>
+
+<!-- Clean Footer Section -->
+<footer class="footer-landing">
+  <div class="footer-container">
+    <div class="footer-logo"><img src="{% static 'images/logo.jpg' %}" alt="LiG" class="logo-img-footer"></div>
+    <div>&copy; {% now "Y" %} LuckyTech Innovation Ground. All rights reserved.</div>
+    <div class="footer-links">
+      <a href="{% url 'login' %}">Student Login</a>
+      <a href="#benefits">About Program</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Accordion Toggle JavaScript -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const questions = document.querySelectorAll('.faq-question');
+    
+    questions.forEach(question => {
+      question.addEventListener('click', () => {
+        const item = question.parentElement;
+        const answer = item.querySelector('.faq-answer');
+        const isActive = item.classList.contains('active');
+        
+        // Close other open accordions
+        document.querySelectorAll('.faq-item').forEach(otherItem => {
+          if (otherItem !== item) {
+            otherItem.classList.remove('active');
+            otherItem.querySelector('.faq-answer').style.maxHeight = null;
+          }
+        });
+        
+        // Toggle current accordion item
+        if (isActive) {
+          item.classList.remove('active');
+          answer.style.maxHeight = null;
+        } else {
+          item.classList.add('active');
+          answer.style.maxHeight = answer.scrollHeight + 'px';
+        }
+      });
+    });
+  });
+</script>
+
+{% endblock %}

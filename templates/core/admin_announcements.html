@@ -1,0 +1,59 @@
+{% extends "core/admin_base.html" %}
+{% load static %}
+{% block title %}Announcements - LiG Admin{% endblock %}
+{% block admin_content %}
+
+<h1 style="margin-top:32px; font-size:28px;">Announcements</h1>
+<div class="welcome-meta">
+  <span>Post announcements and email students.</span>
+</div>
+
+<section class="admin-capacity">
+  <h3 style="margin-bottom:16px;">Post New Announcement</h3>
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-row">
+      <div class="form-group">
+        <label for="title">Title</label>
+        <input type="text" id="title" name="title" placeholder="e.g. Payment Deadline Extended" required>
+      </div>
+      <div class="form-group">
+        <label for="announcement_cohort">Audience</label>
+        <select id="announcement_cohort" name="announcement_cohort">
+          <option value="">All Cohorts</option>
+          {% for c in cohorts %}
+            <option value="{{ c.id }}">{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label for="body">Message</label>
+      <textarea id="body" name="body" rows="3" placeholder="Write your announcement..." required
+        style="width:100%; padding:12px 14px; border:1px solid var(--color-border); border-radius:8px; font-size:15px; font-family:inherit;"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Post &amp; Email Students</button>
+  </form>
+</section>
+
+<section class="admin-table-section">
+  <h3>Past Announcements</h3>
+  {% if announcements %}
+    {% for a in announcements %}
+    <div class="announcement-item" style="margin-bottom:10px;">
+      <div class="announcement-header">
+        <span class="announcement-title">{{ a.title }} {% if a.cohort %}<span style="color:var(--color-text-muted); font-weight:400; font-size:12px;">({{ a.cohort.name }})</span>{% endif %}</span>
+        <span class="announcement-date">{{ a.created_at|date:"M d, Y" }}</span>
+      </div>
+      <p>{{ a.body }}</p>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="empty-state">
+    <i class="fa-solid fa-bullhorn"></i>
+    <p>No announcements posted yet.</p>
+  </div>
+  {% endif %}
+</section>
+
+{% endblock %}

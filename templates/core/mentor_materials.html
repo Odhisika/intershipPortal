@@ -1,0 +1,125 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Learning Materials - Mentor Portal{% endblock %}
+{% block content %}
+
+<div class="admin-layout">
+  <header class="admin-header">
+    <div class="container admin-header-inner">
+      <div class="admin-logo"><img src="{% static 'images/logo.jpg' %}" alt="LiG" class="logo-img-header"> <span class="admin-logo-sub">Mentor Portal</span></div>
+      <a href="{% url 'mentor_logout' %}" class="btn btn-outline" style="border-color:rgba(255,255,255,0.3); color:#fff;">Log Out</a>
+    </div>
+  </header>
+
+  <div class="container">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'success' }}" style="max-width:none; margin:24px 0 0;">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    {% include "core/mentor_nav.html" with active="materials" %}
+
+    <h1 style="margin-top:32px; font-size:28px;">Learning Materials</h1>
+    <div class="welcome-meta">
+      <span>Upload and manage learning materials (files, links) for your courses.</span>
+    </div>
+
+    <section class="admin-capacity">
+      <h3 style="margin-bottom:16px;">Upload New Material</h3>
+      <form method="post" action="{% url 'mentor_material_upload' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-row">
+          <div class="form-group">
+            <label for="course">Course</label>
+            <select id="course" name="course" required>
+              <option value="">-- Select --</option>
+              {% for c in courses %}
+                <option value="{{ c.id }}">{{ c.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="week">Week (optional)</label>
+            <select id="week" name="week">
+              <option value="">-- All weeks --</option>
+              {% for c in courses %}
+                {% for w in c.weeks.all %}
+                  <option value="{{ w.id }}">{{ c.name }} - Week {{ w.week_number }}</option>
+                {% endfor %}
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" placeholder="e.g. Python Variables Guide" required>
+          </div>
+          <div class="form-group">
+            <label for="link">External Link (optional)</label>
+            <input type="url" id="link" name="link" placeholder="https://youtube.com/... or Google Doc link">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:16px;">
+          <label for="description">Description (optional)</label>
+          <input type="text" id="description" name="description" placeholder="Brief description of this material">
+        </div>
+        <div class="form-group" style="margin-bottom:16px;">
+          <label for="file">Upload File (optional)</label>
+          <input type="file" id="file" name="file" style="padding:10px 0;">
+        </div>
+        <button type="submit" class="btn btn-primary">Upload Material</button>
+      </form>
+    </section>
+
+    <section class="admin-table-section">
+      <h3>All Materials</h3>
+      {% if materials %}
+      <div class="history-table-wrapper">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Course</th>
+              <th>Week</th>
+              <th>Type</th>
+              <th>Uploaded</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in materials %}
+            <tr>
+              <td>{{ m.title }}</td>
+              <td>{{ m.course.name }}</td>
+              <td>{% if m.week %}Week {{ m.week.week_number }}{% else %}-{% endif %}</td>
+              <td>
+                {% if m.file %}<span class="status-pill status-success">File</span>{% endif %}
+                {% if m.link %}<span class="status-pill status-pending">Link</span>{% endif %}
+              </td>
+              <td>{{ m.created_at|date:"M d, Y" }}</td>
+              <td>
+                <form method="post" action="{% url 'mentor_material_delete' m.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="receipt-link" style="color:#dc2626; background:none; border:none; cursor:pointer;" onclick="return confirm('Delete this material?')">Delete</button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" style="text-align:center; padding:24px;">No materials uploaded yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="fa-solid fa-folder-open"></i>
+        <p>No learning materials uploaded yet.</p>
+      </div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+
+{% endblock %}

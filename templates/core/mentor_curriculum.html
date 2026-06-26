@@ -1,0 +1,72 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Curriculum - Mentor Portal{% endblock %}
+{% block content %}
+
+<div class="admin-layout">
+  <header class="admin-header">
+    <div class="container admin-header-inner">
+      <div class="admin-logo"><img src="{% static 'images/logo.jpg' %}" alt="LiG" class="logo-img-header"> <span class="admin-logo-sub">Mentor Portal</span></div>
+      <a href="{% url 'mentor_logout' %}" class="btn btn-outline" style="border-color:rgba(255,255,255,0.3); color:#fff;">Log Out</a>
+    </div>
+  </header>
+
+  <div class="container">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'success' }}" style="max-width:none; margin:24px 0 0;">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    {% include "core/mentor_nav.html" with active="curriculum" %}
+
+    <h1 style="margin-top:32px; font-size:28px;">Curriculum</h1>
+    <div class="welcome-meta">
+      <span>Edit the weekly curriculum for your assigned courses.</span>
+    </div>
+
+    <form method="get" style="margin-bottom:24px;">
+      <div class="form-group" style="max-width:400px;">
+        <label for="course">Select Course</label>
+        <select id="course" name="course" onchange="this.form.submit()">
+          <option value="">-- Choose a course --</option>
+          {% for c in courses %}
+            <option value="{{ c.id }}" {% if course and course.id == c.id %}selected{% endif %}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+
+    {% if course %}
+      <h3 style="margin-bottom:16px; font-size:18px;">{{ course.name }} &mdash; {{ course.duration_weeks }} Weeks</h3>
+
+      {% for week in weeks %}
+      <div class="outline-card">
+        <form method="post" action="{% url 'mentor_curriculum_edit' week.id %}">
+          {% csrf_token %}
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Week {{ week.week_number }} Title</label>
+            <input type="text" name="title" value="{{ week.title }}" required>
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Description</label>
+            <textarea name="description" rows="2" style="width:100%; padding:10px 12px; border-radius:8px; border:none; font-size:14px; font-family:inherit;">{{ week.description }}</textarea>
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Weekend Milestone</label>
+            <textarea name="milestone" rows="2" style="width:100%; padding:10px 12px; border-radius:8px; border:none; font-size:14px; font-family:inherit;">{{ week.milestone }}</textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Week {{ week.week_number }}</button>
+        </form>
+      </div>
+      {% empty %}
+      <div class="empty-state">
+        <i class="fa-solid fa-book-open"></i>
+        <p>No curriculum weeks yet for this course.</p>
+      </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

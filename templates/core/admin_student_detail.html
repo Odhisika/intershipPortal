@@ -1,0 +1,304 @@
+{% extends "core/admin_base.html" %}
+{% load static %}
+{% block title %}{{ student.full_name }} - LiG Admin{% endblock %}
+{% block admin_content %}
+
+<div style="margin-top:32px;">
+  <a href="{% url 'admin_students' %}" style="color:#94a3b8; text-decoration:none; font-size:14px;">
+    <i class="fa-solid fa-arrow-left"></i> Back to Students
+  </a>
+</div>
+
+<div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-top:16px;">
+  <div>
+    <h1 style="font-size:28px; margin:0;">{{ student.full_name }}</h1>
+    <div class="welcome-meta" style="margin-top:4px;">
+      <span>{{ student.student_id }} &middot; {{ student.email }}</span>
+    </div>
+  </div>
+  <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+    {% if student.is_approved %}
+      <span class="badge badge-approved">Approved</span>
+    {% else %}
+      <span class="status-pill status-pending">Pending</span>
+    {% endif %}
+    {% if student.attachment_status == "APPROVED" %}
+      <span class="status-pill status-success">Payment Confirmed</span>
+    {% else %}
+      <span class="status-pill status-pending">Payment Pending</span>
+    {% endif %}
+    {% if student.is_active %}
+      <span class="status-pill status-success">Active</span>
+    {% else %}
+      <span class="status-pill status-failed">Suspended</span>
+    {% endif %}
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:32px;">
+  <div class="admin-capacity">
+    <h3>Application Details</h3>
+    <table class="info-table">
+      <tr><td>Phone</td><td>{{ student.phone }}</td></tr>
+      <tr><td>Institution</td><td>{{ student.institution }}</td></tr>
+      <tr><td>Programme</td><td>{{ student.programme }}</td></tr>
+      <tr><td>Level</td><td>{{ student.get_level_display }}</td></tr>
+      <tr><td>Duration</td><td>{{ student.duration }}</td></tr>
+      <tr><td>Department</td><td>{{ student.get_department_display|default:"-" }}</td></tr>
+      <tr><td>Cohort</td><td>{{ student.cohort.name|default:"-" }}</td></tr>
+      <tr><td>Courses</td>
+        <td>
+          {% for c in student.all_courses %}
+            {{ c.name }}{% if not forloop.last %}, {% endif %}
+          {% empty %}-
+          {% endfor %}
+        </td>
+      </tr>
+      <tr><td>Registered On</td><td>{{ student.created_at|date:"M d, Y" }}</td></tr>
+    </table>
+  </div>
+
+  <div class="admin-capacity">
+    <h3>Payment Summary</h3>
+    <table class="info-table">
+      <tr><td>Total Paid</td><td>GHS {{ student.total_paid }}</td></tr>
+      <tr><td>Attachment Fee</td><td>GHS {{ student.config.attachment_fee }}</td></tr>
+      <tr><td>Required Amount</td><td>GHS {{ student.config.required_amount }}</td></tr>
+      <tr><td>Outstanding</td><td style="color:#dc2626; font-weight:700;">GHS {{ student.outstanding_balance }}</td></tr>
+      <tr><td>Progress</td><td>{{ student.progress_percentage }}%</td></tr>
+      <tr>
+        <td>Payment Status</td>
+        <td>
+          {% if student.has_paid_required_amount %}
+            <span class="status-pill status-success">Paid</span>
+          {% else %}
+            <span class="status-pill status-pending">Not Fully Paid</span>
+          {% endif %}
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+{% if student.attachment_letter %}
+<div class="admin-capacity" style="margin-top:24px;">
+  <h3>Attachment Letter</h3>
+  <p style="margin-bottom:12px; color:#94a3b8; font-size:14px;">
+    <i class="fa-solid fa-file-pdf" style="color:#dc2626;"></i>
+    {{ student.attachment_letter.name }}
+  </p>
+  <a href="{{ student.attachment_letter.url }}" target="_blank" class="btn btn-primary" style="padding:10px 24px; font-size:13px;">
+    <i class="fa-solid fa-eye"></i> View PDF
+  </a>
+</div>
+{% endif %}
+
+<div class="admin-table-section" style="margin-top:24px;">
+  <h3>Payment History</h3>
+  {% if payments %}
+  <div class="history-table-wrapper">
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Amount (GHS)</th>
+          <th>Status</th>
+          <th>Channel</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td style="font-size:12px;">{{ p.reference }}</td>
+          <td>{{ p.amount }}</td>
+          <td>
+            {% if p.status == "success" %}
+              <span class="status-pill status-success">Success</span>
+            {% elif p.status == "failed" %}
+              <span class="status-pill status-failed">Failed</span>
+            {% else %}
+              <span class="status-pill status-pending">Pending</span>
+            {% endif %}
+          </td>
+          <td>{{ p.channel|default:"-" }}</td>
+          <td>{{ p.created_at|date:"M d, Y H:i" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <p>No payments recorded for this student.</p>
+  </div>
+  {% endif %}
+</div>
+
+<div class="admin-capacity" style="margin-top:24px;">
+  <h3>Certificate</h3>
+  {% if certificate %}
+    <table class="info-table" style="margin-bottom:16px;">
+      <tr><td>Certificate ID</td><td>{{ certificate.certificate_id }}</td></tr>
+      <tr><td>Issued On</td><td>{{ certificate.issued_at|date:"M d, Y H:i" }}</td></tr>
+    </table>
+    <div style="display:flex; gap:8px;">
+      {% if certificate.file %}
+        <a href="{{ certificate.file.url }}" target="_blank" class="btn btn-primary" style="padding:10px 24px; font-size:13px;">
+          <i class="fa-solid fa-file-pdf"></i> View Certificate
+        </a>
+      {% endif %}
+      <form method="post" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" name="action" value="revoke_certificate" class="btn btn-outline" style="border-color:#dc2626; color:#dc2626;">
+          <i class="fa-solid fa-arrow-rotate-left"></i> Revoke
+        </button>
+      </form>
+    </div>
+  {% else %}
+    <p style="color:#94a3b8; font-size:14px; margin-bottom:16px;">
+      No certificate has been issued for this student yet.
+    </p>
+    <form method="post" style="display:inline;">
+      {% csrf_token %}
+      <button type="submit" name="action" value="issue_certificate" class="btn btn-primary">
+        <i class="fa-solid fa-award"></i> Issue Certificate
+      </button>
+    </form>
+  {% endif %}
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:24px;">
+  <div class="admin-capacity">
+    <h3>Approval</h3>
+    <p style="color:#94a3b8; font-size:14px; margin-bottom:16px;">
+      {% if student.is_approved %}
+        This student is currently <strong style="color:#16a34a;">approved</strong> for the internship.
+      {% else %}
+        This student has <strong>not yet been approved</strong> for the internship.
+      {% endif %}
+    </p>
+    <form method="post" style="display:inline;">
+      {% csrf_token %}
+      {% if student.is_approved %}
+        <button type="submit" name="action" value="unapprove" class="btn btn-outline" style="border-color:#dc2626; color:#dc2626;">
+          <i class="fa-solid fa-xmark"></i> Revoke Approval
+        </button>
+      {% else %}
+        <button type="submit" name="action" value="approve" class="btn btn-primary">
+          <i class="fa-solid fa-check"></i> Approve Student
+        </button>
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="admin-capacity">
+    <h3>Account Status</h3>
+    <p style="color:#94a3b8; font-size:14px; margin-bottom:16px;">
+      {% if student.is_active %}
+        This student account is currently <strong style="color:#16a34a;">active</strong>.
+      {% else %}
+        This student account is currently <strong style="color:#dc2626;">suspended</strong>.
+      {% endif %}
+    </p>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      {% if student.is_active %}
+        <button onclick="showConfirmModal('suspend')" class="btn btn-outline" style="border-color:#f59e0b; color:#f59e0b;">
+          <i class="fa-solid fa-pause"></i> Suspend
+        </button>
+      {% else %}
+        <form method="post" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" name="action" value="reinstate" class="btn btn-primary">
+            <i class="fa-solid fa-play"></i> Reinstate
+          </button>
+        </form>
+      {% endif %}
+      <button onclick="showConfirmModal('delete')" class="btn btn-outline" style="border-color:#dc2626; color:#dc2626;">
+        <i class="fa-solid fa-trash-can"></i> Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmModal" style="display:none;">
+  <div class="modal-card" style="max-width:400px;">
+    <div class="modal-icon" id="modalIcon" style="color:#f59e0b;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <h3 id="modalTitle">Are you sure?</h3>
+    <p id="modalMessage" style="margin-bottom:24px;">This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button onclick="hideConfirmModal()" class="btn btn-outline" style="border-color:var(--color-border);">Cancel</button>
+      <form method="post" id="confirmForm" style="display:inline;">
+        {% csrf_token %}
+        <input type="hidden" name="action" id="confirmAction" value="">
+        <button type="submit" class="btn btn-primary" id="modalConfirmBtn">Confirm</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function showConfirmModal(action) {
+  var modal = document.getElementById('confirmModal');
+  var icon = document.getElementById('modalIcon');
+  var title = document.getElementById('modalTitle');
+  var message = document.getElementById('modalMessage');
+  var confirmBtn = document.getElementById('modalConfirmBtn');
+
+  if (action === 'delete') {
+    icon.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+    icon.style.color = '#dc2626';
+    title.textContent = 'Delete Student?';
+    message.textContent = 'Are you sure you want to permanently delete {{ student.full_name }} and all associated records? This cannot be undone.';
+    confirmBtn.className = 'btn btn-primary';
+    confirmBtn.style.background = '#dc2626';
+    confirmBtn.textContent = 'Delete';
+  } else {
+    icon.innerHTML = '<i class="fa-solid fa-pause"></i>';
+    icon.style.color = '#f59e0b';
+    title.textContent = 'Suspend Student?';
+    message.textContent = 'Are you sure you want to suspend {{ student.full_name }}? They will not be able to log in until reinstated.';
+    confirmBtn.className = 'btn btn-primary';
+    confirmBtn.style.background = '#f59e0b';
+    confirmBtn.textContent = 'Suspend';
+  }
+
+  document.getElementById('confirmAction').value = action;
+  modal.style.display = 'flex';
+}
+
+function hideConfirmModal() {
+  document.getElementById('confirmModal').style.display = 'none';
+}
+
+document.getElementById('confirmModal').addEventListener('click', function(e) {
+  if (e.target === this) hideConfirmModal();
+});
+</script>
+
+<style>
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .info-table td {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 14px;
+  }
+  .info-table td:first-child {
+    color: #94a3b8;
+    font-weight: 600;
+    width: 160px;
+    vertical-align: top;
+  }
+  .info-table td:last-child {
+    color: #e2e8f0;
+  }
+  .info-table tr:last-child td {
+    border-bottom: none;
+  }
+</style>
+
+{% endblock %}

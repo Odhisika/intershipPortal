@@ -1,0 +1,172 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}{{ student.full_name }} - Mentor Portal{% endblock %}
+{% block content %}
+
+<div class="admin-layout">
+  <header class="admin-header">
+    <div class="container admin-header-inner">
+      <div class="admin-logo"><img src="{% static 'images/logo.jpg' %}" alt="LiG" class="logo-img-header"> <span class="admin-logo-sub">Mentor Portal</span></div>
+      <a href="{% url 'mentor_dashboard' %}" class="btn btn-outline" style="border-color:rgba(255,255,255,0.3); color:#fff;">
+        <i class="fa-solid fa-arrow-left"></i> Back to Students
+      </a>
+    </div>
+  </header>
+
+  <div class="container">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'success' }}" style="max-width:none; margin:24px 0 0;">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <h1 style="margin-top:32px; font-size:28px;">{{ student.full_name }}</h1>
+    <div class="welcome-meta">
+      <span>{{ student.student_id }} &middot;
+        {% if student.courses.exists %}
+          {% for c in student.courses.all %}{{ c.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        {% else %}
+          {{ student.get_department_display }}
+        {% endif %}
+        &middot; {{ student.email }}</span>
+    </div>
+
+    <section class="admin-stats">
+      <div class="stat-card stat-success">
+        <div class="stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
+        <div class="stat-value">{{ student.attendance_percentage }}%</div>
+        <div class="stat-label">Attendance Rate</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-list-check"></i></div>
+        <div class="stat-value">{{ student.assignments_completed_count }} / 8</div>
+        <div class="stat-label">Assignments Completed</div>
+      </div>
+      <div class="stat-card stat-revenue">
+        <div class="stat-icon"><i class="fa-solid fa-sack-dollar"></i></div>
+        <div class="stat-value">GHS {{ student.total_paid }}</div>
+        <div class="stat-label">Total Paid</div>
+      </div>
+    </section>
+
+    <section class="admin-table-section">
+      <h3>Week Progress</h3>
+      {% for item in courses_weeks %}
+        <div style="margin-bottom:16px;">
+          <strong>{{ item.course.name }}</strong>
+          <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
+            {% for w in item.weeks %}
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="complete_week_id" value="{{ w.week.id }}">
+                <button type="submit" class="btn {% if w.is_completed %}btn-primary{% else %}btn-outline{% endif %}"
+                        style="padding:4px 12px; font-size:12px;">
+                  Week {{ w.week.week_number }}
+                  {% if w.is_completed %}<i class="fa-solid fa-check"></i>{% endif %}
+                </button>
+              </form>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </section>
+
+    <section class="admin-table-section">
+      <h3>Assignments</h3>
+      {% for assignment in assignments %}
+      <div class="outline-card">
+        <div class="outline-card-header">
+          <div>
+            <span class="module">Week {{ assignment.week.week_number }} &middot; {{ assignment.week.title }}</span>
+            {% if assignment.submission_url %}
+              <p class="module-desc">
+                <a href="{{ assignment.submission_url }}" target="_blank" rel="noopener" style="color:var(--color-accent);">
+                  {{ assignment.submission_url }}
+                </a>
+              </p>
+              {% if assignment.notes %}<p class="module-desc">Notes: {{ assignment.notes }}</p>{% endif %}
+            {% else %}
+              <p class="module-desc">No submission yet.</p>
+            {% endif %}
+          </div>
+          {% if assignment.status == "reviewed" %}
+            <span class="status status-reviewed">REVIEWED</span>
+          {% elif assignment.status == "submitted" %}
+            <span class="status status-submitted">SUBMITTED</span>
+          {% else %}
+            <span class="status status-pending-week">NOT SUBMITTED</span>
+          {% endif %}
+        </div>
+
+        {% if assignment.submission_url %}
+        <form method="post" class="assignment-form">
+          {% csrf_token %}
+          <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Feedback</label>
+            <input type="text" name="feedback" placeholder="Add feedback for this submission" value="{{ assignment.feedback|default:'' }}">
+          </div>
+          <button type="submit" class="btn btn-primary">Save Feedback</button>
+        </form>
+        {% endif %}
+      </div>
+      {% empty %}
+      <div class="empty-state">
+        <i class="fa-solid fa-book-open"></i>
+        <p>No assignments yet.</p>
+      </div>
+      {% endfor %}
+    </section>
+
+    <section class="admin-table-section">
+      <h3>Attendance</h3>
+      {% if attendance_records %}
+      <div class="history-table-wrapper">
+        <table class="history-table">
+          <thead>
+            <tr><th>Date</th><th>Week</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for record in attendance_records %}
+            <tr>
+              <td>{{ record.date|date:"M d, Y" }}</td>
+              <td>{% if record.week %}Week {{ record.week.week_number }}{% else %}-{% endif %}</td>
+              <td>
+                {% if record.status == "present" %}
+                  <span class="status-pill status-success">Present</span>
+                {% elif record.status == "pending" %}
+                  <span class="status-pill status-pending">Pending</span>
+                {% elif record.status == "excused" %}
+                  <span class="status-pill status-pending">Excused</span>
+                {% else %}
+                  <span class="status-pill status-failed">Absent</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if record.status == "pending" %}
+                  <form method="post" action="{% url 'mentor_attendance_approve' record.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary" style="padding:4px 10px; font-size:12px;"><i class="fa-solid fa-check"></i></button>
+                  </form>
+                  <form method="post" action="{% url 'mentor_attendance_reject' record.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline" style="padding:4px 10px; font-size:12px; border-color:#fca5a5; color:#dc2626;"><i class="fa-solid fa-xmark"></i></button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="fa-solid fa-calendar-xmark"></i>
+        <p>No attendance records yet.</p>
+      </div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+
+{% endblock %}

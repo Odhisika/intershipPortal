@@ -1,0 +1,77 @@
+{% extends "core/admin_base.html" %}
+{% load static %}
+{% load core_extras %}
+{% block title %}Attendance - LiG Admin{% endblock %}
+{% block admin_content %}
+
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:32px;">
+      <h1 style="font-size:28px; margin:0;">Attendance</h1>
+      <a href="{% url 'admin_attendance_history' %}" class="btn btn-outline" style="border-color:var(--color-border);">
+        <i class="fa-solid fa-clock-rotate-left"></i> View History
+      </a>
+    </div>
+    <div class="welcome-meta">
+      <span>Mark attendance for each student on a given date.</span>
+    </div>
+
+    <form method="get" style="margin-bottom:20px; display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+      <div class="form-group" style="max-width:220px;">
+        <label for="date">Date</label>
+        <input type="date" id="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()">
+      </div>
+    </form>
+
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="date" value="{{ selected_date }}">
+
+      <div class="form-group" style="max-width:300px; margin-bottom:20px;">
+        <label for="week">Curriculum Week (optional)</label>
+        <select id="week" name="week">
+          <option value="">-- None --</option>
+          {% for week in weeks %}
+            <option value="{{ week.id }}">Week {{ week.week_number }}: {{ week.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="history-table-wrapper">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Name</th>
+              <th>Present</th>
+              <th>Absent</th>
+              <th>Excused</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for student in students %}
+            <tr>
+              <td>{{ student.student_id }}</td>
+              <td>{{ student.full_name }}</td>
+              <td style="text-align:center;">
+                <input type="radio" name="status_{{ student.id }}" value="present"
+                  {% if existing|get_item:student.id == "present" %}checked{% endif %}>
+              </td>
+              <td style="text-align:center;">
+                <input type="radio" name="status_{{ student.id }}" value="absent"
+                  {% if existing|get_item:student.id == "absent" %}checked{% endif %}>
+              </td>
+              <td style="text-align:center;">
+                <input type="radio" name="status_{{ student.id }}" value="excused"
+                  {% if existing|get_item:student.id == "excused" %}checked{% endif %}>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" style="text-align:center; padding:24px;">No students registered yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="margin-top:20px;">Save Attendance</button>
+    </form>
+
+{% endblock %}

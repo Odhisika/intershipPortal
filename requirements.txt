@@ -1,0 +1,7 @@
+django>=5.0,<5.3
+reportlab>=4.0
+requests>=2.31
+python-decouple>=3.8
+django-ratelimit>=4.1
+django-csp>=3.8
+psycopg2-binary>=2.9

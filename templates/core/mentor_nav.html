@@ -1,0 +1,17 @@
+<nav class="admin-nav">
+  <a href="{% url 'mentor_dashboard' %}" class="{% if active == 'dashboard' %}active{% endif %}">
+    <i class="fa-solid fa-chart-line"></i> Dashboard
+  </a>
+  <a href="{% url 'mentor_attendance' %}" class="{% if active == 'attendance' %}active{% endif %}">
+    <i class="fa-solid fa-calendar-check"></i> Attendance
+  </a>
+  <a href="{% url 'mentor_curriculum' %}" class="{% if active == 'curriculum' %}active{% endif %}">
+    <i class="fa-solid fa-book"></i> Curriculum
+  </a>
+  <a href="{% url 'mentor_materials' %}" class="{% if active == 'materials' %}active{% endif %}">
+    <i class="fa-solid fa-folder-open"></i> Materials
+  </a>
+  <a href="{% url 'mentor_settings' %}" class="{% if active == 'settings' %}active{% endif %}">
+    <i class="fa-solid fa-gear"></i> Settings
+  </a>
+</nav>

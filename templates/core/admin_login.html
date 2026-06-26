@@ -1,0 +1,45 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Admin Login - LuckyTech Innovation Ground{% endblock %}
+{% block content %}
+
+<div class="login-wrapper">
+  <div class="login-card">
+    <h1>Admin Access</h1>
+    <p class="login-subtitle">Sign in with a Django superuser account.</p>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'error' }}" style="max-width:none;">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="field-group">
+        <label for="username">Username</label>
+        <div class="input-with-icon">
+          <i class="fa-solid fa-user icon"></i>
+          <input type="text" id="username" name="username" placeholder="Superuser username" required>
+        </div>
+      </div>
+      <div class="field-group">
+        <label for="password">Password</label>
+        <div class="input-with-icon">
+          <i class="fa-solid fa-lock icon"></i>
+          <input type="password" id="password" name="password" placeholder="Password" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">
+        Access Dashboard <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <i class="fa-solid fa-shield-halved shield"></i> LIG TECHNOLOGY MANAGEMENT
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends "core/admin_base.html" %}
+{% load static %}
+{% block title %}Cohorts - LiG Admin{% endblock %}
+{% block admin_content %}
+
+    <h1 style="margin-top:32px; font-size:28px;">Cohorts</h1>
+    <div class="welcome-meta">
+      <span>Manage intake cycles. New applicants are assigned to the default cohort.</span>
+    </div>
+
+    <section class="admin-capacity">
+      <h3 style="margin-bottom:16px;">Create New Cohort</h3>
+      <form method="post" class="capacity-form" style="border-top:none; padding-top:0;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Cohort Name</label>
+            <input type="text" id="name" name="name" placeholder="e.g. September 2026 Cohort" required>
+          </div>
+          <div class="form-group">
+            <label for="max_students">Max Students</label>
+            <input type="number" id="max_students" name="max_students" value="50" min="1" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="start_date">Start Date</label>
+            <input type="date" id="start_date" name="start_date">
+          </div>
+          <div class="form-group">
+            <label for="end_date">End Date</label>
+            <input type="date" id="end_date" name="end_date">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="attachment_fee">Attachment Fee (GHS)</label>
+            <input type="number" id="attachment_fee" name="attachment_fee" value="300" step="0.01" min="0" required>
+          </div>
+          <div class="form-group">
+            <label for="required_payment_percentage">Required Payment (%)</label>
+            <input type="number" id="required_payment_percentage" name="required_payment_percentage" value="50" min="1" max="100" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Cohort</button>
+      </form>
+    </section>
+
+    <section class="admin-table-section">
+      <h3>All Cohorts</h3>
+      <div class="history-table-wrapper">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Dates</th>
+              <th>Slots Filled</th>
+              <th>Fee (GHS)</th>
+              <th>Required %</th>
+              <th>Registration</th>
+              <th>Default</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in cohorts %}
+            <tr>
+              <td>{{ c.name }}</td>
+              <td>
+                {% if c.start_date or c.end_date %}
+                  {{ c.start_date|date:"M d, Y"|default:"-" }} &ndash; {{ c.end_date|date:"M d, Y"|default:"-" }}
+                {% else %}-{% endif %}
+              </td>
+              <td>{{ c.paid_students_count }} / {{ c.max_students }}</td>
+              <td>{{ c.attachment_fee }}</td>
+              <td>{{ c.required_payment_percentage }}%</td>
+              <td>
+                {% if c.is_registration_open %}
+                  <span class="status-pill status-success">Open</span>
+                {% else %}
+                  <span class="status-pill status-failed">Closed</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if c.is_default %}
+                  <span class="status-pill status-success">Default</span>
+                {% else %}
+                  <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="set_default">
+                    <input type="hidden" name="cohort_id" value="{{ c.id }}">
+                    <button type="submit" class="receipt-link" style="background:none; border:none; cursor:pointer; padding:0;">Make Default</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+{% endblock %}

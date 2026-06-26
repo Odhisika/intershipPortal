@@ -1,0 +1,59 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Settings - Mentor Portal{% endblock %}
+{% block content %}
+
+<div class="admin-layout">
+  <header class="admin-header">
+    <div class="container admin-header-inner">
+      <div class="admin-logo"><img src="{% static 'images/logo.jpg' %}" alt="LiG" class="logo-img-header"> <span class="admin-logo-sub">Mentor Portal</span></div>
+      <div style="display:flex; gap:8px;">
+        <a href="{% url 'mentor_dashboard' %}" class="btn btn-outline" style="border-color:rgba(255,255,255,0.3); color:#fff;">
+          <i class="fa-solid fa-arrow-left"></i> Dashboard
+        </a>
+        <a href="{% url 'mentor_logout' %}" class="btn btn-outline" style="border-color:rgba(255,255,255,0.3); color:#fff;">Log Out</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'success' }}" style="max-width:none; margin:24px 0 0;">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    {% include "core/mentor_nav.html" with active="settings" %}
+
+    <h1 style="margin-top:32px; font-size:28px;">Settings</h1>
+    <div class="welcome-meta">
+      <span>Manage your account settings.</span>
+    </div>
+
+    <section class="admin-capacity" style="margin-top:28px;">
+      <h3 style="margin-bottom:16px;">Change Password</h3>
+      <form method="post" action="{% url 'mentor_change_password' %}">
+        {% csrf_token %}
+        <div class="form-row">
+          <div class="form-group">
+            <label for="current_password">Current Password</label>
+            <input type="password" id="current_password" name="current_password" placeholder="Enter current password" required>
+          </div>
+          <div class="form-group">
+            <label for="new_password">New Password</label>
+            <input type="password" id="new_password" name="new_password" placeholder="Min. 6 characters" required minlength="6">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="confirm_password">Confirm New Password</label>
+            <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter new password" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Change Password</button>
+      </form>
+    </section>
+  </div>
+</div>
+
+{% endblock %}

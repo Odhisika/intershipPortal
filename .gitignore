@@ -1,0 +1,25 @@
+# Environment
+.env
+
+# Database
+db.sqlite3
+
+# Virtual environment
+venv/
+
+# IDE / editor
+.vscode/
+.idea/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Uploaded media (user files)
+media/attachment_letters/
+media/certificates/
+media/learning_materials/
+
+# OS trash
+.DS_Store
+Thumbs.db

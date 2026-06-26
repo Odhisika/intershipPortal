@@ -1,0 +1,48 @@
+{% extends "core/admin_base.html" %}
+{% load static %}
+{% block title %}Assignment History - LiG Admin{% endblock %}
+{% block admin_content %}
+
+<h1 style="margin-top:32px; font-size:28px;">Assignment History</h1>
+<div class="welcome-meta">
+  <span>All student assignment submissions across all courses.</span>
+</div>
+
+<div class="history-table-wrapper">
+  <table class="history-table">
+    <thead>
+      <tr>
+        <th>Student</th>
+        <th>Week</th>
+        <th>Status</th>
+        <th>Submitted</th>
+        <th>Feedback</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in assignments %}
+      <tr>
+        <td>{{ a.student.full_name }} ({{ a.student.student_id }})</td>
+        <td>Week {{ a.week.week_number }}: {{ a.week.title }}</td>
+        <td>
+          {% if a.status == "reviewed" %}
+            <span class="status-pill status-success">Reviewed</span>
+          {% elif a.status == "submitted" %}
+            <span class="status-pill status-pending">Submitted</span>
+          {% else %}
+            <span class="status-pill status-failed">Not Submitted</span>
+          {% endif %}
+        </td>
+        <td>{{ a.submitted_at|date:"M d, Y"|default:"-" }}</td>
+        <td>{{ a.feedback|default:"-"|truncatechars:50 }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" style="text-align:center; padding:24px;">No assignments yet.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

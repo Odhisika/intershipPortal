@@ -1,0 +1,32 @@
+<nav class="admin-nav">
+  <a href="{% url 'admin_dashboard' %}" class="{% if active == 'dashboard' %}active{% endif %}">
+    <i class="fa-solid fa-chart-line"></i> Overview
+  </a>
+  <a href="{% url 'admin_payments' %}" class="{% if active == 'payments' %}active{% endif %}">
+    <i class="fa-solid fa-sack-dollar"></i> Payments
+  </a>
+  <a href="{% url 'admin_students' %}" class="{% if active == 'students' %}active{% endif %}">
+    <i class="fa-solid fa-user-graduate"></i> Students
+  </a>
+  <a href="{% url 'admin_announcements' %}" class="{% if active == 'announcements' %}active{% endif %}">
+    <i class="fa-solid fa-bullhorn"></i> Announcements
+  </a>
+  <a href="{% url 'admin_cohorts' %}" class="{% if active == 'cohorts' %}active{% endif %}">
+    <i class="fa-solid fa-users-rectangle"></i> Cohorts
+  </a>
+  <a href="{% url 'admin_attendance_history' %}" class="{% if active == 'attendance' %}active{% endif %}">
+    <i class="fa-solid fa-calendar-check"></i> Attendance
+  </a>
+  <a href="{% url 'admin_assignment_history' %}" class="{% if active == 'assignments' %}active{% endif %}">
+    <i class="fa-solid fa-list-check"></i> Assignments
+  </a>
+  <a href="{% url 'admin_curriculum' %}" class="{% if active == 'curriculum' %}active{% endif %}">
+    <i class="fa-solid fa-book"></i> Curriculum
+  </a>
+  <a href="{% url 'admin_mentors' %}" class="{% if active == 'mentors' %}active{% endif %}">
+    <i class="fa-solid fa-user-tie"></i> Mentors
+  </a>
+  <a href="{% url 'admin_settings' %}" class="{% if active == 'settings' %}active{% endif %}">
+    <i class="fa-solid fa-gear"></i> Settings
+  </a>
+</nav>
