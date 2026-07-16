@@ -12,7 +12,7 @@
 <form method="get" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; margin-bottom:24px;">
   <div class="form-group" style="min-width:200px;">
     <label for="cohort">Cohort</label>
-    <select id="cohort" name="cohort" onchange="this.form.submit()">
+    <select id="cohort" name="cohort">
       <option value="">All Cohorts</option>
       {% for c in cohorts %}
         <option value="{{ c.id }}" {% if filter_cohort == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
@@ -21,7 +21,7 @@
   </div>
   <div class="form-group" style="min-width:180px;">
     <label for="status">Status</label>
-    <select id="status" name="status" onchange="this.form.submit()">
+    <select id="status" name="status">
       <option value="">All</option>
       <option value="approved" {% if filter_status == 'approved' %}selected{% endif %}>Confirmed</option>
       <option value="pending" {% if filter_status == 'pending' %}selected{% endif %}>Pending</option>

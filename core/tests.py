@@ -1,6 +1,7 @@
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from django.core.files.uploadedfile import SimpleUploadedFile
 from decimal import Decimal
 from .models import (
     Course, CurriculumWeek, Cohort, Student, Mentor,
@@ -135,15 +136,20 @@ class StudentFlowE2ETest(TestCase):
 
     # ── Application & Login ──────────────────────────────────────────────
 
-    def test_01_apply_form_shows_multi_select(self):
+    def test_01_apply_form_shows_laptop_checkbox_and_courses(self):
         r = self.client.get(reverse('apply'))
         self.assertEqual(r.status_code, 200)
-        self.assertContains(r, '<select id="courses"')
-        self.assertContains(r, 'multiple')
-        self.assertContains(r, 'Hold Ctrl/Cmd')
+        self.assertContains(r, 'has_laptop')
+        self.assertContains(r, 'Do you have a laptop')
+        self.assertContains(r, 'Software Development')
+        self.assertContains(r, 'UI/UX Design')
+        self.assertContains(r, 'Networking')
+        self.assertContains(r, 'Cybersecurity')
+        self.assertContains(r, 'IT Support')
 
     def test_02_submit_application(self):
         new_email = 'jane@example.com'
+        pdf = SimpleUploadedFile('letter.pdf', b'%PDF-1.4 fake content', content_type='application/pdf')
         r = self.client.post(reverse('apply'), {
             'full_name': 'Jane Doe',
             'email': new_email,
@@ -151,17 +157,19 @@ class StudentFlowE2ETest(TestCase):
             'institution': 'Test Uni',
             'programme': 'BSc IT',
             'level': '200',
-            'courses': ['software_development', 'networking'],
             'duration': 'June - Nov 2026',
+            'has_laptop': 'on',
+            'attachment_letter': pdf,
         })
         self.assertRedirects(r, reverse('apply'))
         student = Student.objects.get(email=new_email)
-        self.assertEqual(student.courses.count(), 2)
-        self.assertTrue(student.courses.filter(code='software_development').exists())
-        self.assertTrue(student.courses.filter(code='networking').exists())
-        self.assertIsNone(student.department)
+        self.assertTrue(student.has_laptop)
+        self.assertEqual(student.phone, '+233201234567')
+        self.assertTrue(student.attachment_letter)
+        self.assertEqual(student.courses.count(), Course.objects.filter(is_active=True).count())
 
     def test_03_duplicate_email_rejected(self):
+        pdf = SimpleUploadedFile('letter.pdf', b'%PDF-1.4 fake content', content_type='application/pdf')
         r = self.client.post(reverse('apply'), {
             'full_name': 'John Dupe',
             'email': 'john@example.com',
@@ -169,8 +177,9 @@ class StudentFlowE2ETest(TestCase):
             'institution': 'Test Uni',
             'programme': 'BSc IT',
             'level': '200',
-            'courses': ['software_development'],
             'duration': 'June - Nov 2026',
+            'has_laptop': 'on',
+            'attachment_letter': pdf,
         })
         self.assertRedirects(r, reverse('apply'))
         self.assertIn(

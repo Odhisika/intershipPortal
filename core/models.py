@@ -325,6 +325,7 @@ class Student(models.Model):
         upload_to='attachment_letters/', blank=True, null=True,
         validators=[FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'])],
     )
+    has_laptop = models.BooleanField(default=False)
 
     cohort = models.ForeignKey(Cohort, on_delete=models.SET_NULL, related_name='students', blank=True, null=True)
 

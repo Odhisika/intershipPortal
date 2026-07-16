@@ -58,7 +58,8 @@
         <div class="form-row">
           <div class="form-group">
             <label for="phone">Phone Number</label>
-            <input type="tel" id="phone" name="phone" placeholder="+233 ..." required>
+            <input type="tel" id="phone" name="phone" placeholder="+233 5XX XXX XXXX" pattern="(\+233|233|0)\d{9,}" title="Enter a valid Ghana phone number (e.g. +233501234567 or 0501234567)" minlength="10" required>
+            <small style="display:block; margin-top:4px; color:#94a3b8;">Accepts +233XXXXXXXXX or 0XXXXXXXXX</small>
           </div>
           <div class="form-group">
             <label for="institution">Academic Institution</label>
@@ -85,40 +86,46 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label for="courses">Target Course(s)</label>
-            <select id="courses" name="courses" multiple required>
-              <option value="">Select course(s)</option>
-              <option value="software_development">Software Development</option>
-              <option value="ui_ux_design">UI/UX Design</option>
-              <option value="networking">Networking</option>
-              <option value="cybersecurity">Cybersecurity</option>
-              <option value="it_support">IT Support</option>
-            </select>
-            <small style="display:block; margin-top:4px; color:#94a3b8;">Hold Ctrl/Cmd to select multiple courses</small>
-          </div>
-          <div class="form-group">
             <label for="duration">Duration (Dates)</label>
             <input type="text" id="duration" name="duration" placeholder="e.g. June - Nov 2024" required>
           </div>
         </div>
 
+        <div class="form-group" style="margin-bottom:20px;">
+          <label style="display:block; font-size:11px; font-weight:700; letter-spacing:0.06em; color:#94a3b8; text-transform:uppercase; margin-bottom:10px;">
+            Courses You Will Attend
+          </label>
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:14px 16px;">
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <span style="background:rgba(99,102,241,0.15); color:#a5b4fc; padding:5px 12px; border-radius:20px; font-size:13px;">Software Development</span>
+              <span style="background:rgba(99,102,241,0.15); color:#a5b4fc; padding:5px 12px; border-radius:20px; font-size:13px;">UI/UX Design</span>
+              <span style="background:rgba(99,102,241,0.15); color:#a5b4fc; padding:5px 12px; border-radius:20px; font-size:13px;">Networking</span>
+              <span style="background:rgba(99,102,241,0.15); color:#a5b4fc; padding:5px 12px; border-radius:20px; font-size:13px;">Cybersecurity</span>
+              <span style="background:rgba(99,102,241,0.15); color:#a5b4fc; padding:5px 12px; border-radius:20px; font-size:13px;">IT Support</span>
+            </div>
+            <small style="display:block; margin-top:10px; color:#94a3b8;">All students attend every course during the programme.</small>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:20px;">
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px; color:#e2e8f0;">
+            <input type="checkbox" id="has_laptop" name="has_laptop" required style="width:18px; height:18px; accent-color:#6366f1; cursor:pointer;">
+            Do you have a laptop?
+          </label>
+          <small style="display:block; margin-top:4px; color:#94a3b8;">You must have a personal laptop to participate in the programme.</small>
+        </div>
+
         <label for="attachment_letter" style="display:block; font-size:11px; font-weight:700; letter-spacing:0.06em; color:#94a3b8; text-transform:uppercase; margin-bottom:8px;">
-          Attachment Letter
+          Attachment Letter <span style="color:#ef4444;">*</span>
         </label>
         <div class="file-drop">
           <div class="file-drop-icon"><i class="fa-solid fa-file-circle-check"></i></div>
           <label for="attachment_letter" id="file-label" style="cursor:pointer; font-size:14px; color:#cbd5e1; text-transform:none; letter-spacing:normal; font-weight:400;">
             Drag and drop or <span class="browse">Browse</span>
           </label>
-          <input type="file" id="attachment_letter" name="attachment_letter" accept="application/pdf" style="display:none;">
+          <input type="file" id="attachment_letter" name="attachment_letter" accept="application/pdf" required style="display:none;">
           <small>PDF format required</small>
         </div>
-        <script>
-          document.getElementById('attachment_letter').addEventListener('change', function() {
-            var label = document.getElementById('file-label');
-            label.textContent = this.files[0] ? this.files[0].name : 'Drag and drop or Browse';
-          });
-        </script>
 
         <div class="form-submit">
           <button type="submit" class="btn btn-primary">Submit Application</button>
@@ -128,5 +135,7 @@
     </div>
   </div>
 </section>
+
+<script src="{% static 'js/file-upload.js' %}"></script>
 
 {% endblock %}

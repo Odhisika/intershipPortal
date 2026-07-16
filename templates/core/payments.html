@@ -1,4 +1,5 @@
 {% extends "core/portal_base.html" %}
+{% load static %}
 {% block title %}Payments - LiG Student Portal{% endblock %}
 {% block nav_payments %}active{% endblock %}
 
@@ -24,8 +25,8 @@
         <input type="number" id="amount" name="amount" value="{{ min_payment }}" step="0.01" min="1" required>
       </div>
       <div class="payment-quick-links">
-        <a href="#" onclick="document.getElementById('amount').value={{ min_payment }};return false;">Pay Minimum (GHS {{ min_payment }})</a>
-        <a href="#" class="full" onclick="document.getElementById('amount').value={{ full_balance }};return false;">Pay Full Balance (GHS {{ full_balance }})</a>
+        <a href="#" class="pay-min" data-amount="{{ min_payment }}">Pay Minimum (GHS {{ min_payment }})</a>
+        <a href="#" class="full pay-full" data-amount="{{ full_balance }}">Pay Full Balance (GHS {{ full_balance }})</a>
       </div>
 
       <button type="submit" class="btn btn-primary btn-block">
@@ -45,5 +46,7 @@
     </p>
   </div>
 </div>
+
+<script src="{% static 'js/forms.js' %}"></script>
 
 {% endblock %}

@@ -3,13 +3,13 @@
 {% block content %}
 
 <div class="portal-layout">
-  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="logo"><img src="{% static 'images/logo.jpg' %}" alt="LiG" class="logo-img-sidebar"></div>
       <div class="logo-subtitle">Student Portal</div>
-      <button class="sidebar-close" onclick="toggleSidebar()" aria-label="Close menu">
+      <button class="sidebar-close" aria-label="Close menu">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
@@ -43,7 +43,7 @@
 
   <main class="main-content">
     <div class="topbar">
-      <button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Open menu">
+      <button class="mobile-menu-btn" aria-label="Open menu">
         <i class="fa-solid fa-bars"></i>
       </button>
       <div class="topbar-left">
@@ -74,11 +74,6 @@
   </main>
 </div>
 
-<script>
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebarOverlay').classList.toggle('show');
-}
-</script>
+<script src="{% static 'js/sidebar.js' %}"></script>
 
 {% endblock %}

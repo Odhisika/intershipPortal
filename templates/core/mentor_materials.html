@@ -102,7 +102,7 @@
               <td>
                 <form method="post" action="{% url 'mentor_material_delete' m.id %}" style="display:inline;">
                   {% csrf_token %}
-                  <button type="submit" class="receipt-link" style="color:#dc2626; background:none; border:none; cursor:pointer;" onclick="return confirm('Delete this material?')">Delete</button>
+                  <button type="submit" class="receipt-link" style="color:#dc2626; background:none; border:none; cursor:pointer;" data-confirm="Delete this material?">Delete</button>
                 </form>
               </td>
             </tr>
@@ -121,5 +121,7 @@
     </section>
   </div>
 </div>
+
+<script src="{% static 'js/forms.js' %}"></script>
 
 {% endblock %}

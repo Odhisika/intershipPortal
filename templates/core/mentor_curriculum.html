@@ -28,7 +28,7 @@
     <form method="get" style="margin-bottom:24px;">
       <div class="form-group" style="max-width:400px;">
         <label for="course">Select Course</label>
-        <select id="course" name="course" onchange="this.form.submit()">
+        <select id="course" name="course">
           <option value="">-- Choose a course --</option>
           {% for c in courses %}
             <option value="{{ c.id }}" {% if course and course.id == c.id %}selected{% endif %}>{{ c.name }}</option>
@@ -68,5 +68,7 @@
     {% endif %}
   </div>
 </div>
+
+<script src="{% static 'js/forms.js' %}"></script>
 
 {% endblock %}

@@ -204,7 +204,7 @@
     </p>
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
       {% if student.is_active %}
-        <button onclick="showConfirmModal('suspend')" class="btn btn-outline" style="border-color:#f59e0b; color:#f59e0b;">
+        <button data-action="suspend" data-student="{{ student.full_name|escapejs }}" class="btn btn-outline" style="border-color:#f59e0b; color:#f59e0b;">
           <i class="fa-solid fa-pause"></i> Suspend
         </button>
       {% else %}
@@ -215,7 +215,7 @@
           </button>
         </form>
       {% endif %}
-      <button onclick="showConfirmModal('delete')" class="btn btn-outline" style="border-color:#dc2626; color:#dc2626;">
+      <button data-action="delete" data-student="{{ student.full_name|escapejs }}" class="btn btn-outline" style="border-color:#dc2626; color:#dc2626;">
         <i class="fa-solid fa-trash-can"></i> Delete
       </button>
     </div>
@@ -228,7 +228,7 @@
     <h3 id="modalTitle">Are you sure?</h3>
     <p id="modalMessage" style="margin-bottom:24px;">This action cannot be undone.</p>
     <div class="modal-actions">
-      <button onclick="hideConfirmModal()" class="btn btn-outline" style="border-color:var(--color-border);">Cancel</button>
+      <button class="btn btn-outline cancel-btn" style="border-color:var(--color-border);">Cancel</button>
       <form method="post" id="confirmForm" style="display:inline;">
         {% csrf_token %}
         <input type="hidden" name="action" id="confirmAction" value="">
@@ -238,67 +238,7 @@
   </div>
 </div>
 
-<script>
-function showConfirmModal(action) {
-  var modal = document.getElementById('confirmModal');
-  var icon = document.getElementById('modalIcon');
-  var title = document.getElementById('modalTitle');
-  var message = document.getElementById('modalMessage');
-  var confirmBtn = document.getElementById('modalConfirmBtn');
-
-  if (action === 'delete') {
-    icon.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
-    icon.style.color = '#dc2626';
-    title.textContent = 'Delete Student?';
-    message.textContent = 'Are you sure you want to permanently delete {{ student.full_name|escapejs }} and all associated records? This cannot be undone.';
-    confirmBtn.className = 'btn btn-primary';
-    confirmBtn.style.background = '#dc2626';
-    confirmBtn.textContent = 'Delete';
-  } else {
-    icon.innerHTML = '<i class="fa-solid fa-pause"></i>';
-    icon.style.color = '#f59e0b';
-    title.textContent = 'Suspend Student?';
-    message.textContent = 'Are you sure you want to suspend {{ student.full_name|escapejs }}? They will not be able to log in until reinstated.';
-    confirmBtn.className = 'btn btn-primary';
-    confirmBtn.style.background = '#f59e0b';
-    confirmBtn.textContent = 'Suspend';
-  }
-
-  document.getElementById('confirmAction').value = action;
-  modal.style.display = 'flex';
-}
-
-function hideConfirmModal() {
-  document.getElementById('confirmModal').style.display = 'none';
-}
-
-document.getElementById('confirmModal').addEventListener('click', function(e) {
-  if (e.target === this) hideConfirmModal();
-});
-</script>
-
-<style>
-  .info-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  .info-table td {
-    padding: 10px 0;
-    border-bottom: 1px solid var(--color-border);
-    font-size: 14px;
-  }
-  .info-table td:first-child {
-    color: #94a3b8;
-    font-weight: 600;
-    width: 160px;
-    vertical-align: top;
-  }
-  .info-table td:last-child {
-    color: #e2e8f0;
-  }
-  .info-table tr:last-child td {
-    border-bottom: none;
-  }
-</style>
+<script src="{% static 'js/confirm-modal.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/admin-student-detail.css' %}">
 
 {% endblock %}

@@ -31,7 +31,7 @@
         <div class="input-with-icon">
           <i class="fa-solid fa-lock icon"></i>
           <input type="password" id="password" name="password" placeholder="Enter your password" required>
-          <button type="button" class="icon-right" onclick="togglePassword()">
+          <button type="button" class="icon-right">
             <i class="fa-solid fa-eye" id="toggleIcon"></i>
           </button>
         </div>
@@ -65,31 +65,12 @@
       Your account has been suspended. Please contact the administrator for assistance.
     </p>
     <div class="modal-actions">
-      <button onclick="document.getElementById('suspendedModal').style.display='none'" class="btn btn-primary">OK</button>
+      <button class="btn btn-primary suspend-ok-btn">OK</button>
     </div>
   </div>
 </div>
-<script>
-  document.getElementById('suspendedModal').addEventListener('click', function(e) {
-    if (e.target === this) this.style.display = 'none';
-  });
-</script>
 {% endif %}
 
-<script>
-  function togglePassword() {
-    const input = document.getElementById('password');
-    const icon = document.getElementById('toggleIcon');
-    if (input.type === 'password') {
-      input.type = 'text';
-      icon.classList.remove('fa-eye');
-      icon.classList.add('fa-eye-slash');
-    } else {
-      input.type = 'password';
-      icon.classList.remove('fa-eye-slash');
-      icon.classList.add('fa-eye');
-    }
-  }
-</script>
+<script src="{% static 'js/auth.js' %}"></script>
 
 {% endblock %}

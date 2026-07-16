@@ -1,5 +1,6 @@
 import uuid
 import secrets
+import re
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -95,9 +96,40 @@ def apply(request):
         institution = request.POST.get('institution', '').strip()
         programme = request.POST.get('programme', '').strip()
         level = request.POST.get('level', '')
-        course_codes = request.POST.getlist('courses')
         duration = request.POST.get('duration', '').strip()
         attachment_letter = request.FILES.get('attachment_letter')
+        has_laptop = request.POST.get('has_laptop') == 'on'
+
+        # --- Validations ---
+        errors = False
+
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            messages.error(request, "Please enter a valid email address.")
+            errors = True
+
+        # Phone: accept +233XXXXXXXXX, 233XXXXXXXXX, or 0XXXXXXXXX (10+ digits)
+        phone_digits = re.sub(r'[\s\-]', '', phone)
+        phone_match = False
+        normalized_phone = ''
+        if phone_digits.startswith('+233') and len(phone_digits) >= 13:
+            normalized_phone = phone_digits
+            phone_match = True
+        elif phone_digits.startswith('233') and len(phone_digits) >= 12:
+            normalized_phone = '+' + phone_digits
+            phone_match = True
+        elif phone_digits.startswith('0') and len(phone_digits) >= 10:
+            normalized_phone = '+233' + phone_digits[1:]
+            phone_match = True
+        if not phone_match:
+            messages.error(request, "Please enter a valid Ghana phone number (e.g. +233XXXXXXXXX or 0XXXXXXXXX).")
+            errors = True
+
+        if not attachment_letter:
+            messages.error(request, "Please upload your attachment letter (PDF).")
+            errors = True
+
+        if errors:
+            return redirect('apply')
 
         if Student.objects.filter(email=email).exists():
             messages.error(request, "An application with this email already exists. Please log in to your portal.")
@@ -106,20 +138,19 @@ def apply(request):
         student = Student.objects.create(
             full_name=full_name,
             email=email,
-            phone=phone,
+            phone=normalized_phone,
             institution=institution,
             programme=programme,
             level=level,
             duration=duration,
             attachment_letter=attachment_letter,
+            has_laptop=has_laptop,
             cohort=config,
         )
 
-        # Enroll in selected courses
-        for code in course_codes:
-            course = Course.get_for_department(code)
-            if course:
-                student.courses.add(course)
+        # Enroll in all active courses
+        for course in Course.objects.filter(is_active=True):
+            student.courses.add(course)
 
         send_credentials_email(student)
 

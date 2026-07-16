@@ -3,13 +3,13 @@
 {% block content %}
 
 <div class="admin-layout">
-  <div class="admin-sidebar-overlay" id="adminSidebarOverlay" onclick="toggleAdminSidebar()"></div>
+  <div class="admin-sidebar-overlay" id="adminSidebarOverlay"></div>
 
   <aside class="admin-sidebar" id="adminSidebar">
     <div class="sidebar-header">
       <div class="logo"><img src="{% static 'images/logo.jpg' %}" alt="LiG" class="logo-img-sidebar"></div>
       <div class="logo-subtitle">Management</div>
-      <button class="sidebar-close" onclick="toggleAdminSidebar()" aria-label="Close menu">
+      <button class="sidebar-close" aria-label="Close menu">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
@@ -54,7 +54,7 @@
     <header class="admin-header">
       <div class="container admin-header-inner">
         <div style="display:flex; align-items:center; gap:16px;">
-          <button class="mobile-menu-btn" onclick="toggleAdminSidebar()" aria-label="Open menu">
+          <button class="mobile-menu-btn" aria-label="Open menu">
             <i class="fa-solid fa-bars"></i>
           </button>
           <div class="admin-logo"><img src="{% static 'images/logo.jpg' %}" alt="LiG" class="logo-img-header"> <span class="admin-logo-sub">Management</span></div>
@@ -77,11 +77,7 @@
   </main>
 </div>
 
-<script>
-function toggleAdminSidebar() {
-  document.getElementById('adminSidebar').classList.toggle('open');
-  document.getElementById('adminSidebarOverlay').classList.toggle('show');
-}
-</script>
+<script src="{% static 'js/sidebar.js' %}"></script>
+<script src="{% static 'js/forms.js' %}"></script>
 
 {% endblock %}

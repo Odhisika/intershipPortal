@@ -47,3 +47,11 @@ LiG Technology Team
 [18/Jun/2026 10:13:04] "POST /manage/mentors/ HTTP/1.1" 302 0
 [18/Jun/2026 10:13:04] "GET /manage/mentors/ HTTP/1.1" 200 7412
 [18/Jun/2026 10:13:04] "GET /static/css/style.css HTTP/1.1" 304 0
+
+
+Admin login
+
+http://localhost:8000/manage/
+
+- Username: lig
+- Password: admin1234
