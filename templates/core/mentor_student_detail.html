@@ -78,37 +78,23 @@
         <div class="outline-card-header">
           <div>
             <span class="module">Week {{ assignment.week.week_number }} &middot; {{ assignment.week.title }}</span>
-            {% if assignment.submission_url %}
-              <p class="module-desc">
-                <a href="{{ assignment.submission_url }}" target="_blank" rel="noopener" style="color:var(--color-accent);">
-                  {{ assignment.submission_url }}
-                </a>
-              </p>
-              {% if assignment.notes %}<p class="module-desc">Notes: {{ assignment.notes }}</p>{% endif %}
-            {% else %}
-              <p class="module-desc">No submission yet.</p>
-            {% endif %}
           </div>
           {% if assignment.status == "reviewed" %}
             <span class="status status-reviewed">REVIEWED</span>
-          {% elif assignment.status == "submitted" %}
-            <span class="status status-submitted">SUBMITTED</span>
           {% else %}
-            <span class="status status-pending-week">NOT SUBMITTED</span>
+            <span class="status status-pending-week">NOT REVIEWED</span>
           {% endif %}
         </div>
 
-        {% if assignment.submission_url %}
         <form method="post" class="assignment-form">
           {% csrf_token %}
           <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
           <div class="form-group" style="margin-bottom:12px;">
             <label>Feedback</label>
-            <input type="text" name="feedback" placeholder="Add feedback for this submission" value="{{ assignment.feedback|default:'' }}">
+            <input type="text" name="feedback" placeholder="Add feedback for this assignment" value="{{ assignment.feedback|default:'' }}">
           </div>
           <button type="submit" class="btn btn-primary">Save Feedback</button>
         </form>
-        {% endif %}
       </div>
       {% empty %}
       <div class="empty-state">

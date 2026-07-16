@@ -3,18 +3,23 @@ built with reportlab.
 """
 
 import io
+import os
 
+from django.conf import settings
 from django.utils import timezone
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 
 
-ACCENT = colors.HexColor("#2563EB")
-ACCENT_LIGHT = colors.HexColor("#22D3EE")
+ACCENT = colors.HexColor("#22d3ee")
+ACCENT_DARK = colors.HexColor("#2563eb")
 DARK = colors.HexColor("#0F172A")
 GREY = colors.HexColor("#64748B")
+
+LOGO_PATH = os.path.join(settings.BASE_DIR, "static", "images", "logo.jpg")
 
 
 def generate_certificate_pdf(student, certificate):
@@ -25,17 +30,17 @@ def generate_certificate_pdf(student, certificate):
     c = canvas.Canvas(buffer, pagesize=page_size)
 
     # Border
-    c.setStrokeColor(ACCENT)
+    c.setStrokeColor(ACCENT_DARK)
     c.setLineWidth(4)
     c.rect(20 * mm, 15 * mm, width - 40 * mm, height - 30 * mm)
-    c.setStrokeColor(ACCENT_LIGHT)
+    c.setStrokeColor(ACCENT)
     c.setLineWidth(1)
     c.rect(24 * mm, 19 * mm, width - 48 * mm, height - 38 * mm)
 
     # Header
-    c.setFillColor(ACCENT)
+    c.setFillColor(ACCENT_DARK)
     c.setFont("Helvetica-Bold", 22)
-    c.drawCentredString(width / 2, height - 45 * mm, "LiG TECHNOLOGY")
+    c.drawCentredString(width / 2, height - 45 * mm, "LuckyTech Innovation Ground")
 
     c.setFillColor(DARK)
     c.setFont("Helvetica-Bold", 34)
@@ -102,14 +107,33 @@ def generate_receipt_pdf(student, payment):
 
     margin = 20 * mm
 
+    # Watermark
+    c.saveState()
+    c.setFillColor(colors.HexColor("#E2E8F0"))
+    c.setFont("Helvetica-Bold", 42)
+    c.translate(width / 2, height / 2)
+    c.rotate(45)
+    c.drawCentredString(0, 0, "LuckyTech Innovation Ground")
+    c.restoreState()
+
     # Header bar
-    c.setFillColor(ACCENT)
+    c.setFillColor(ACCENT_DARK)
     c.rect(0, height - 30 * mm, width, 30 * mm, fill=1, stroke=0)
+
+    # Logo
+    logo_size = 18 * mm
+    if os.path.exists(LOGO_PATH):
+        logo = ImageReader(LOGO_PATH)
+        logo_y = height - 24 * mm
+        c.drawImage(logo, margin, logo_y, width=logo_size, height=logo_size, preserveAspectRatio=True, mask='auto')
+
+    # Company name + receipt label
+    text_x = margin + (logo_size + 4 * mm if os.path.exists(LOGO_PATH) else 0)
     c.setFillColor(colors.white)
-    c.setFont("Helvetica-Bold", 20)
-    c.drawString(margin, height - 18 * mm, "LiG TECHNOLOGY")
-    c.setFont("Helvetica", 11)
-    c.drawRightString(width - margin, height - 18 * mm, "Payment Receipt")
+    c.setFont("Helvetica-Bold", 18)
+    c.drawString(text_x, height - 17 * mm, "LuckyTech Innovation Ground")
+    c.setFont("Helvetica", 10)
+    c.drawRightString(width - margin, height - 17 * mm, "Payment Receipt")
 
     y = height - 45 * mm
 

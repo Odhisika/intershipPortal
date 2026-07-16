@@ -17,7 +17,6 @@ urlpatterns = [
     path('payments/receipt/<int:payment_id>/', views.download_receipt, name='download_receipt'),
 
     path('course-outline/', views.course_outline, name='course_outline'),
-    path('course-outline/submit/<int:week_id>/', views.submit_assignment, name='submit_assignment'),
     path('attendance/', views.attendance_view, name='attendance'),
     path('materials/', views.student_materials, name='student_materials'),
     path('certificate/', views.download_certificate, name='download_certificate'),

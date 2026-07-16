@@ -220,29 +220,6 @@ class StudentFlowE2ETest(TestCase):
         self.assertContains(r, 'UI/UX Design')
         self.assertContains(r, 'course-tab')
 
-    def test_08_submit_assignment_locked_week_rejected(self):
-        self.login()
-        w2 = self.courses['software_development'].weeks.get(week_number=2)
-        r = self.client.post(reverse('submit_assignment', args=[w2.id]), {
-            'submission_url': 'https://github.com/test/project',
-        })
-        self.assertRedirects(r, reverse('course_outline'))
-        self.assertIn(
-            'locked',
-            ''.join(m.message for m in list(r.wsgi_request._messages)),
-        )
-
-    def test_09_submit_assignment_open_week(self):
-        self.login()
-        w1 = self.courses['software_development'].weeks.get(week_number=1)
-        r = self.client.post(reverse('submit_assignment', args=[w1.id]), {
-            'submission_url': 'https://github.com/test/project',
-        })
-        self.assertRedirects(r, reverse('course_outline'))
-        assignment = Assignment.objects.get(student=self.student, week=w1)
-        self.assertEqual(assignment.submission_url, 'https://github.com/test/project')
-        self.assertEqual(assignment.status, 'submitted')
-
     # ── Progressive unlocking after mentor marks complete ────────────────
 
     def test_10_progressive_unlock_after_week1_completed(self):

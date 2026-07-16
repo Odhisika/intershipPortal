@@ -157,21 +157,17 @@ class CurriculumWeek(models.Model):
 
 
 class Assignment(models.Model):
-    """A student's submission for a given curriculum week."""
+    """Tracks mentor review status for a student's in-person assignment."""
 
     STATUS_CHOICES = [
         ('not_submitted', 'Not Submitted'),
-        ('submitted', 'Submitted'),
         ('reviewed', 'Reviewed'),
     ]
 
     student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='assignments')
     week = models.ForeignKey(CurriculumWeek, on_delete=models.CASCADE, related_name='assignments')
-    submission_url = models.URLField(blank=True, help_text="Link to GitHub repo, live demo, etc.")
-    notes = models.TextField(blank=True, help_text="Any notes from the student about their submission.")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='not_submitted')
     feedback = models.TextField(blank=True, help_text="Mentor/admin feedback.")
-    submitted_at = models.DateTimeField(blank=True, null=True)
     reviewed_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -434,7 +430,7 @@ class Student(models.Model):
 
     @property
     def assignments_completed_count(self):
-        return self.assignments.filter(status__in=['submitted', 'reviewed']).count()
+        return self.assignments.filter(status='reviewed').count()
 
     @property
     def is_programme_complete(self):

@@ -42,7 +42,7 @@ class CohortAdmin(admin.ModelAdmin):
 
 @admin.register(Assignment)
 class AssignmentAdmin(admin.ModelAdmin):
-    list_display = ('student', 'week', 'status', 'submitted_at', 'reviewed_at')
+    list_display = ('student', 'week', 'status', 'reviewed_at')
     list_filter = ('status', 'week')
     search_fields = ('student__student_id', 'student__full_name')
 

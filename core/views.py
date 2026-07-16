@@ -337,6 +337,7 @@ def payments(request, student):
         'config': config,
         'min_payment': config.required_amount,
         'full_balance': config.attachment_fee,
+        'fully_paid': student.has_paid_required_amount,
     }
     return render(request, 'core/payments.html', context)
 
@@ -430,55 +431,13 @@ def course_outline(request, student):
             # Next week opens only when this week is completed
             previous_completed = is_completed
 
-    try:
-        certificate = student.certificate
-    except Certificate.DoesNotExist:
-        certificate = None
-
     context = {
         'student': student,
         'courses': courses,
         'course': course,
         'week_data': week_data,
-        'certificate': certificate,
     }
     return render(request, 'core/course_outline.html', context)
-
-
-@require_login
-def submit_assignment(request, student, week_id):
-    week = get_object_or_404(CurriculumWeek, pk=week_id, course__in=student.courses.all())
-
-    # Check if week is unlocked
-    completed_ids = set(student.completed_weeks.values_list('id', flat=True))
-    earlier_weeks = week.course.weeks.filter(week_number__lt=week.week_number)
-    for ew in earlier_weeks:
-        if ew.id not in completed_ids:
-            messages.error(request, "This week is locked. Complete the previous week first.")
-            return redirect('course_outline')
-
-    if request.method == 'POST':
-        submission_url = request.POST.get('submission_url', '').strip()
-        notes = request.POST.get('notes', '').strip()
-
-        if not submission_url:
-            messages.error(request, "Please provide a link to your submission (e.g. GitHub repo URL).")
-            return redirect('course_outline')
-
-        if not (submission_url.startswith('http://') or submission_url.startswith('https://')):
-            messages.error(request, "Please provide a valid URL starting with http:// or https://.")
-            return redirect('course_outline')
-
-        assignment, _ = Assignment.objects.get_or_create(student=student, week=week)
-        assignment.submission_url = submission_url
-        assignment.notes = notes
-        assignment.status = 'submitted'
-        assignment.submitted_at = timezone.now()
-        assignment.save()
-
-        messages.success(request, f"Your submission for Week {week.week_number} has been recorded.")
-
-    return redirect('course_outline')
 
 
 @require_login
