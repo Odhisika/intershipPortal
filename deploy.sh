@@ -9,13 +9,14 @@ git pull
 
 echo "==> Fixing ownership and permissions..."
 sudo chown -R lig:www-data /var/www/intern
-sudo find /var/www/intern -type d -exec chmod 755 {} +
-sudo find /var/www/intern -type f -exec chmod 664 {} +
+sudo find /var/www/intern -type d -not -path "*/media/*" -exec chmod 755 {} +
+sudo find /var/www/intern -type f -not -path "*/media/*" -exec chmod 664 {} +
 
-echo "==> Ensuring media directories exist..."
+echo "==> Ensuring media directories exist and are writable..."
 sudo mkdir -p /var/www/intern/media/attachment_letters
 sudo chown -R www-data:www-data /var/www/intern/media
-sudo chmod -R 775 /var/www/intern/media
+sudo find /var/www/intern/media -type d -exec chmod 775 {} +
+sudo find /var/www/intern/media -type f -exec chmod 664 {} +
 
 echo "==> Fixing SQLite database permissions..."
 sudo touch /var/www/intern/db.sqlite3
