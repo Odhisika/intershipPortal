@@ -27,17 +27,19 @@ echo "==> Adding safe directory for git..."
 sudo git config --global --add safe.directory /var/www/intern
 
 
+VENV_DIR="$REPO_DIR/venv"
+
 echo "==> Installing dependencies..."
-pip install -r requirements.txt
+"$VENV_DIR/bin/pip" install -r requirements.txt
 
 echo "==> Applying database migrations..."
-python manage.py migrate --noinput
+"$VENV_DIR/bin/python" manage.py migrate --noinput
 
 echo "==> Collecting static files..."
-python manage.py collectstatic --noinput
+"$VENV_DIR/bin/python" manage.py collectstatic --noinput
 
 echo "==> Running Django checks..."
-python manage.py check
+"$VENV_DIR/bin/python" manage.py check
 
 echo "==> Restarting Apache..."
 sudo systemctl restart apache2
