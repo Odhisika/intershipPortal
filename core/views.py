@@ -135,6 +135,10 @@ def apply(request):
             messages.error(request, "An application with this email already exists. Please log in to your portal.")
             return redirect('apply')
 
+        if Student.objects.filter(phone=normalized_phone).exists():
+            messages.error(request, "An application with this phone number already exists. Please log in to your portal.")
+            return redirect('apply')
+
         student = Student.objects.create(
             full_name=full_name,
             email=email,
