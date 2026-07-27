@@ -7,10 +7,10 @@ cd "$REPO_DIR"
 echo "==> Pulling latest changes from git..."
 git pull
 
-sudo chown -R lig:www-data /var/www/LiG
-sudo chmod -R 755 /var/www/LiG
-sudo chmod -R 775 /var/www/LiG/media
-sudo chmod -R 775 /var/www/LiG/logs
+sudo chown -R lig:www-data /var/www/intern
+sudo chmod -R 755 /var/www/intern
+sudo chmod -R 775 /var/www/intern/media
+sudo chmod -R 775 /var/www/intern/logs
 
 echo "==> Installing dependencies..."
 pip install -r requirements.txt

@@ -55,3 +55,21 @@ http://localhost:8000/manage/
 
 - Username: lig
 - Password: admin1234
+
+
+
+
+Thank you for registering with LuckyTech Innovation Ground.
+
+Your application has been received. You can now log in to your student portal using the credentials below:
+
+  Student ID: LIG-2026-7455
+  Password:   5ZUMnmxe
+
+Please log in and complete your attachment payment to confirm your placement.
+
+Login here: /login/
+
+Best regards,
+LuckyTech Innovation Ground Team
+-------------------------------------

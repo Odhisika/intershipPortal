@@ -2,7 +2,6 @@
 
 A Django-based **Student Attachment/Internship Management System** for **LuckyTech Innovation Ground (LiG Technology)**, a Ghanaian technology training organisation. The platform manages the full lifecycle of an 8-week industrial attachment programme — from online application and payment through curriculum delivery, mentor oversight, attendance tracking, assignment submission, and PDF certificate generation.
 
-The project also doubles as a **penetration testing lab** with 10 intentionally introduced security vulnerabilities for educational purposes (see [`cyber.md`](cyber.md)).
 
 ---
 
