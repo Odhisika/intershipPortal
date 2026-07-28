@@ -18,13 +18,6 @@ sudo chown -R www-data:www-data /var/www/intern/media
 sudo find /var/www/intern/media -type d -exec chmod 775 {} +
 sudo find /var/www/intern/media -type f -exec chmod 664 {} +
 
-echo "==> Fixing SQLite database permissions..."
-sudo chown lig:www-data /var/www/intern
-sudo chmod 775 /var/www/intern
-sudo touch /var/www/intern/db.sqlite3
-sudo chown lig:www-data /var/www/intern/db.sqlite3
-sudo chmod 664 /var/www/intern/db.sqlite3
-
 echo "==> Adding safe directory for git..."
 sudo git config --global --add safe.directory /var/www/intern
 
@@ -48,5 +41,12 @@ echo "==> Running Django checks..."
 
 echo "==> Restarting Apache..."
 sudo systemctl restart apache2
+
+echo "==> Fixing SQLite database permissions..."
+sudo chown lig:www-data /var/www/intern/db.sqlite3
+sudo chmod 664 /var/www/intern/db.sqlite3
+sudo chown lig:www-data /var/www/intern
+sudo chmod 775 /var/www/intern
+sudo chmod 775 /var/www/intern/media
 
 echo "==> Deployment complete!"
