@@ -1035,7 +1035,7 @@ def admin_attendance_history(request):
 
 @require_admin
 def admin_assignment_history(request):
-    assignments = Assignment.objects.select_related('student', 'week').all().order_by('-submitted_at')
+    assignments = Assignment.objects.select_related('student', 'week').all().order_by('-reviewed_at', '-id')
     context = {
         'active': 'assignments',
         'assignments': assignments,

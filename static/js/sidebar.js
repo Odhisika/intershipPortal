@@ -25,8 +25,8 @@ function toggleAdminSidebar() {
 
 // Auto-attach click handlers if elements exist
 document.addEventListener('DOMContentLoaded', () => {
-    // Student portal toggle button
-    var studentToggle = document.querySelector('.mobile-menu-btn');
+    // Student portal toggle button (only on portal pages with a sidebar)
+    var studentToggle = document.querySelector('.portal-layout .mobile-menu-btn');
     if (studentToggle) {
         studentToggle.addEventListener('click', function(e) {
             e.preventDefault();
@@ -35,13 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Student sidebar close button
-    var studentClose = document.querySelector('.sidebar-close');
+    var studentClose = document.querySelector('.sidebar:not(.admin-sidebar) .sidebar-close');
     if (studentClose) {
         studentClose.addEventListener('click', toggleSidebar);
     }
     
     // Admin toggle button
-    var adminToggle = document.querySelector('[onclick="toggleAdminSidebar()"]');
+    var adminToggle = document.querySelector('.admin-header .mobile-menu-btn');
     if (adminToggle) {
         adminToggle.addEventListener('click', function(e) {
             e.preventDefault();
