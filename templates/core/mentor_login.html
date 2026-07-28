@@ -12,7 +12,15 @@
 
     {% if messages %}
       {% for message in messages %}
-        <div class="alert alert-{{ message.tags|default:'error' }}" style="max-width:none;">{{ message }}</div>
+        <div class="alert alert-{{ message.tags|default:'error' }}" style="max-width:none;">
+          {{ message }}
+          {% if 'locked' in message|lower or 'too many' in message|lower %}
+            <div style="margin-top:10px; font-size:14px;">
+              <a href="{% url 'mentor_forgot_password' %}" style="color:var(--color-accent);">Reset your password</a> or
+              <a href="mailto:admin@lig.com.gh" style="color:var(--color-accent);">contact your administrator</a> for assistance.
+            </div>
+          {% endif %}
+        </div>
       {% endfor %}
     {% endif %}
 
@@ -32,6 +40,10 @@
           <i class="fa-solid fa-lock icon"></i>
           <input type="password" id="password" name="password" placeholder="Enter your password" required>
         </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; margin-bottom:20px;">
+        <a href="{% url 'mentor_forgot_password' %}" style="color:var(--color-accent); font-size:14px;">Forgot Password?</a>
       </div>
 
       <button type="submit" class="btn btn-primary btn-block">

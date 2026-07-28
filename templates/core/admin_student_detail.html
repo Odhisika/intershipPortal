@@ -203,6 +203,12 @@
       {% endif %}
     </p>
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <form method="post" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" name="action" value="reset_password" class="btn btn-primary" style="font-size:13px;">
+          <i class="fa-solid fa-key"></i> Reset Password
+        </button>
+      </form>
       {% if student.is_active %}
         <button data-action="suspend" data-student="{{ student.full_name|escapejs }}" class="btn btn-outline" style="border-color:#f59e0b; color:#f59e0b;">
           <i class="fa-solid fa-pause"></i> Suspend

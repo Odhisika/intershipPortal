@@ -499,7 +499,8 @@ class LearningMaterial(models.Model):
 class PasswordResetToken(models.Model):
     """One-time use token for password reset, expires after 1 hour."""
 
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='reset_tokens')
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='reset_tokens', null=True, blank=True)
+    mentor = models.ForeignKey(Mentor, on_delete=models.CASCADE, related_name='reset_tokens', null=True, blank=True)
     token = models.CharField(max_length=64, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
@@ -507,6 +508,10 @@ class PasswordResetToken(models.Model):
 
     def is_valid(self):
         return not self.used and self.expires_at > timezone.now()
+
+    @property
+    def user(self):
+        return self.student or self.mentor
 
     class Meta:
         ordering = ['-created_at']

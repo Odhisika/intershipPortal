@@ -1,0 +1,118 @@
+{% extends "core/admin_base.html" %}
+{% load static %}
+{% block title %}{{ mentor.full_name }} - LiG Admin{% endblock %}
+{% block admin_content %}
+
+<div style="margin-top:32px;">
+  <a href="{% url 'admin_mentors' %}" style="color:#94a3b8; text-decoration:none; font-size:14px;">
+    <i class="fa-solid fa-arrow-left"></i> Back to Mentors
+  </a>
+</div>
+
+<div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-top:16px;">
+  <div>
+    <h1 style="font-size:28px; margin:0;">{{ mentor.full_name }}</h1>
+    <div class="welcome-meta" style="margin-top:4px;">
+      <span>{{ mentor.mentor_id }} &middot; {{ mentor.email }}</span>
+    </div>
+  </div>
+  <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+    {% if mentor.is_active %}
+      <span class="status-pill status-success">Active</span>
+    {% else %}
+      <span class="status-pill status-failed">Inactive</span>
+    {% endif %}
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:32px;">
+  <div class="admin-capacity">
+    <h3>Mentor Details</h3>
+    <table class="info-table">
+      <tr><td>Full Name</td><td>{{ mentor.full_name }}</td></tr>
+      <tr><td>Mentor ID</td><td>{{ mentor.mentor_id }}</td></tr>
+      <tr><td>Email</td><td>{{ mentor.email }}</td></tr>
+      <tr><td>Courses</td>
+        <td>
+          {% for c in mentor.courses.all %}
+            {{ c.name }}{% if not forloop.last %}, {% endif %}
+          {% empty %}-
+          {% endfor %}
+        </td>
+      </tr>
+      <tr><td>Assigned Students</td><td>{{ mentor.students.count }}</td></tr>
+      <tr><td>Created</td><td>{{ mentor.created_at|date:"M d, Y" }}</td></tr>
+    </table>
+  </div>
+
+  <div class="admin-capacity">
+    <h3>Account Actions</h3>
+    <div style="display:flex; flex-direction:column; gap:12px; margin-top:8px;">
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" name="action" value="reset_password" class="btn btn-primary" style="width:100%;">
+          <i class="fa-solid fa-key"></i> Reset Password &amp; Email Link
+        </button>
+      </form>
+
+      {% if mentor.is_active %}
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" name="action" value="deactivate" class="btn btn-outline" style="border-color:#f59e0b; color:#f59e0b; width:100%;">
+            <i class="fa-solid fa-pause"></i> Deactivate Account
+          </button>
+        </form>
+      {% else %}
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" name="action" value="reactivate" class="btn btn-primary" style="width:100%;">
+            <i class="fa-solid fa-play"></i> Reactivate Account
+          </button>
+        </form>
+      {% endif %}
+
+      <button data-action="delete_mentor" data-mentor="{{ mentor.full_name|escapejs }}" class="btn btn-outline" style="border-color:#dc2626; color:#dc2626; width:100%;">
+        <i class="fa-solid fa-trash-can"></i> Delete Mentor
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmModal" style="display:none;">
+  <div class="modal-card" style="max-width:400px;">
+    <div class="modal-icon" id="modalIcon" style="color:#f59e0b;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <h3 id="modalTitle">Are you sure?</h3>
+    <p id="modalMessage" style="margin-bottom:24px;">This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline cancel-btn" style="border-color:var(--color-border);">Cancel</button>
+      <form method="post" id="confirmForm" style="display:inline;">
+        {% csrf_token %}
+        <input type="hidden" name="action" id="confirmAction" value="">
+        <button type="submit" class="btn btn-primary" id="modalConfirmBtn">Confirm</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var deleteBtn = document.querySelector('[data-action="delete_mentor"]');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', function() {
+      document.getElementById('modalTitle').textContent = 'Delete Mentor?';
+      document.getElementById('modalMessage').textContent = 'This will permanently delete ' + this.dataset.mentor + ' and cannot be undone.';
+      document.getElementById('confirmAction').value = 'delete';
+      document.getElementById('confirmModal').style.display = 'flex';
+    });
+  }
+  var cancelBtn = document.querySelector('.cancel-btn');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', function() {
+      document.getElementById('confirmModal').style.display = 'none';
+    });
+  }
+});
+</script>
+<link rel="stylesheet" href="{% static 'css/admin-student-detail.css' %}">
+
+{% endblock %}

@@ -10,7 +10,14 @@
 
     {% if messages %}
       {% for message in messages %}
-        <div class="alert alert-{{ message.tags|default:'error' }}" style="max-width:none;">{{ message }}</div>
+        <div class="alert alert-{{ message.tags|default:'error' }}" style="max-width:none;">
+          {{ message }}
+          {% if 'locked' in message|lower or 'too many' in message|lower %}
+            <div style="margin-top:10px; font-size:14px;">
+              Contact the server administrator to reset your admin password.
+            </div>
+          {% endif %}
+        </div>
       {% endfor %}
     {% endif %}
 

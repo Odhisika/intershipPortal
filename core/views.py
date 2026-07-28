@@ -8,6 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
 from django.utils import timezone
 from django.db import models as db_models
+from django.core.cache import cache
 from django.core.files.base import ContentFile
 from django.http import HttpResponse
 from django_ratelimit.decorators import ratelimit
@@ -19,8 +20,8 @@ from .models import (
 )
 from .emails import (
     send_credentials_email, send_password_reset_email,
-    send_mentor_credentials_email, send_announcement_email,
-    send_certificate_ready_email,
+    send_mentor_credentials_email, send_mentor_password_reset_email,
+    send_announcement_email, send_certificate_ready_email,
 )
 from . import paystack
 from .pdfs import generate_certificate_pdf, generate_receipt_pdf
@@ -29,6 +30,57 @@ from .pdfs import generate_certificate_pdf, generate_receipt_pdf
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+LOGIN_ATTEMPT_LIMIT = 3
+LOGIN_LOCKOUT_SECONDS = 3600  # 1 hour
+
+
+def _get_client_ip(request):
+    xff = request.META.get('HTTP_X_FORWARDED_FOR')
+    return xff.split(',')[0].strip() if xff else request.META.get('REMOTE_ADDR', '')
+
+
+def _login_failed_key(login_type, identifier):
+    return f"login_attempts:{login_type}:{identifier}"
+
+
+def _login_lockout_key(login_type, identifier):
+    return f"login_lockout:{login_type}:{identifier}"
+
+
+def check_login_rate_limit(request, login_type, identifier):
+    """Returns (is_locked, seconds_remaining). identifier = user id or IP."""
+    lockout_key = _login_lockout_key(login_type, identifier)
+    lockout_until = cache.get(lockout_key)
+    if lockout_until:
+        remaining = int(lockout_until - timezone.now().timestamp())
+        if remaining > 0:
+            return True, remaining
+        cache.delete(lockout_key)
+    return False, 0
+
+
+def record_failed_login(request, login_type, identifier):
+    """Increment failed attempts. Locks out after LOGIN_ATTEMPT_LIMIT."""
+    key = _login_failed_key(login_type, identifier)
+    attempts = cache.get(key, 0) + 1
+    cache.set(key, attempts, LOGIN_LOCKOUT_SECONDS)
+    if attempts >= LOGIN_ATTEMPT_LIMIT:
+        lockout_until = timezone.now().timestamp() + LOGIN_LOCKOUT_SECONDS
+        cache.set(
+            _login_lockout_key(login_type, identifier),
+            lockout_until,
+            LOGIN_LOCKOUT_SECONDS,
+        )
+        cache.delete(key)
+        return True
+    return False
+
+
+def clear_login_attempts(login_type, identifier):
+    """Clear failed attempts on successful login."""
+    cache.delete(_login_failed_key(login_type, identifier))
+    cache.delete(_login_lockout_key(login_type, identifier))
 
 def get_logged_in_student(request):
     student_pk = request.session.get('student_pk')
@@ -170,6 +222,17 @@ def apply(request):
 @ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def login_view(request):
     if request.method == 'POST':
+        ip = _get_client_ip(request)
+        is_locked, remaining = check_login_rate_limit(request, 'student', ip)
+        if is_locked:
+            minutes = remaining // 60
+            seconds = remaining % 60
+            messages.error(
+                request,
+                f"Too many failed attempts. Please try again in {minutes}m {seconds}s.",
+            )
+            return redirect('login')
+
         student_id = request.POST.get('student_id', '').strip().upper()
         password = request.POST.get('password', '').strip()
 
@@ -178,11 +241,16 @@ def login_view(request):
         if student and student.check_password(password):
             if not student.is_active:
                 return redirect(f"{reverse('login')}?suspended=1")
+            clear_login_attempts('student', ip)
             request.session.cycle_key()
             request.session['student_pk'] = student.pk
             return redirect('dashboard')
 
-        messages.error(request, "Invalid Student ID or Password. Please check your email for your login details.")
+        locked_out = record_failed_login(request, 'student', ip)
+        if locked_out:
+            messages.error(request, "Too many failed attempts. Your account is locked for 1 hour.")
+        else:
+            messages.error(request, "Invalid Student ID or Password. Please check your email for your login details.")
         return redirect('login')
 
     return render(request, 'core/login.html')
@@ -268,6 +336,78 @@ def reset_password(request, token):
         return redirect('login')
 
     return render(request, 'core/reset_password.html', {'valid_link': True})
+
+
+@ratelimit(key='ip', rate='3/m', method='POST', block=True)
+def mentor_forgot_password(request):
+    """Email a password reset link to a mentor."""
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip().lower()
+        mentor = Mentor.objects.filter(email=email).first()
+
+        if mentor:
+            mentor.reset_tokens.filter(used=False).update(used=True)
+            token = secrets.token_urlsafe(48)
+            PasswordResetToken.objects.create(
+                mentor=mentor,
+                token=token,
+                expires_at=timezone.now() + timezone.timedelta(hours=1),
+            )
+            reset_url = request.build_absolute_uri(
+                reverse('mentor_reset_password', kwargs={'token': token})
+            )
+            send_mentor_password_reset_email(mentor, reset_url)
+
+        messages.success(
+            request,
+            "If an account exists with that email address, a password "
+            "reset link has been sent to it."
+        )
+        return redirect('mentor_forgot_password')
+
+    return render(request, 'core/mentor_forgot_password.html')
+
+
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
+def mentor_reset_password(request, token):
+    """Verify a mentor reset token and allow setting a new password."""
+    reset = get_object_or_404(PasswordResetToken, token=token)
+
+    if not reset.is_valid():
+        if not reset.used:
+            reset.used = True
+            reset.save()
+        messages.error(
+            request,
+            "This password reset link is invalid or has expired. "
+            "Please request a new one."
+        )
+        return redirect('mentor_forgot_password')
+
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password', '')
+        confirm = request.POST.get('confirm_password', '')
+
+        if len(new_password) < 8:
+            messages.error(request, "Password must be at least 8 characters.")
+            return render(request, 'core/mentor_reset_password.html', {'valid_link': True})
+
+        if new_password != confirm:
+            messages.error(request, "Passwords do not match.")
+            return render(request, 'core/mentor_reset_password.html', {'valid_link': True})
+
+        reset.user.set_password(new_password)
+        reset.user.save()
+        reset.used = True
+        reset.save()
+
+        messages.success(
+            request,
+            "Your password has been reset successfully. You can now log in."
+        )
+        return redirect('mentor_login')
+
+    return render(request, 'core/mentor_reset_password.html', {'valid_link': True})
 
 
 # ---------------------------------------------------------------------------
@@ -504,6 +644,17 @@ def download_certificate(request, student):
 @ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def mentor_login(request):
     if request.method == 'POST':
+        ip = _get_client_ip(request)
+        is_locked, remaining = check_login_rate_limit(request, 'mentor', ip)
+        if is_locked:
+            minutes = remaining // 60
+            seconds = remaining % 60
+            messages.error(
+                request,
+                f"Too many failed attempts. Please try again in {minutes}m {seconds}s.",
+            )
+            return redirect('mentor_login')
+
         mentor_id = request.POST.get('mentor_id', '').strip().upper()
         password = request.POST.get('password', '').strip()
 
@@ -512,11 +663,16 @@ def mentor_login(request):
         if mentor and mentor.check_password(password):
             if not mentor.is_active:
                 return redirect(f"{reverse('mentor_login')}?suspended=1")
+            clear_login_attempts('mentor', ip)
             request.session.cycle_key()
             request.session['mentor_pk'] = mentor.pk
             return redirect('mentor_dashboard')
 
-        messages.error(request, "Invalid Mentor ID or Password.")
+        locked_out = record_failed_login(request, 'mentor', ip)
+        if locked_out:
+            messages.error(request, "Too many failed attempts. Your account is locked for 1 hour.")
+        else:
+            messages.error(request, "Invalid Mentor ID or Password.")
         return redirect('mentor_login')
 
     return render(request, 'core/mentor_login.html')
@@ -854,13 +1010,30 @@ def admin_assignment_history(request):
 @ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def admin_login(request):
     if request.method == 'POST':
+        ip = _get_client_ip(request)
+        is_locked, remaining = check_login_rate_limit(request, 'admin', ip)
+        if is_locked:
+            minutes = remaining // 60
+            seconds = remaining % 60
+            messages.error(
+                request,
+                f"Too many failed attempts. Please try again in {minutes}m {seconds}s.",
+            )
+            return redirect('admin_login')
+
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '').strip()
         user = authenticate(request, username=username, password=password)
         if user is not None and user.is_superuser:
+            clear_login_attempts('admin', ip)
             login(request, user)
             return redirect('admin_dashboard')
-        messages.error(request, "Invalid superuser credentials.")
+
+        locked_out = record_failed_login(request, 'admin', ip)
+        if locked_out:
+            messages.error(request, "Too many failed attempts. Your account is locked for 1 hour.")
+        else:
+            messages.error(request, "Invalid superuser credentials.")
         return redirect('admin_login')
     return render(request, 'core/admin_login.html')
 
@@ -961,6 +1134,46 @@ def admin_mentors(request):
     courses = Course.objects.all()
     context = {'active': 'mentors', 'mentors': mentors, 'courses': courses}
     return render(request, 'core/admin_mentors.html', context)
+
+
+@require_admin
+def admin_mentor_detail(request, mentor_id):
+    mentor = get_object_or_404(Mentor, id=mentor_id)
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'reset_password':
+            mentor.reset_tokens.filter(used=False).update(used=True)
+            token = secrets.token_urlsafe(48)
+            PasswordResetToken.objects.create(
+                mentor=mentor,
+                token=token,
+                expires_at=timezone.now() + timezone.timedelta(hours=1),
+            )
+            reset_url = request.build_absolute_uri(
+                reverse('mentor_reset_password', kwargs={'token': token})
+            )
+            send_mentor_password_reset_email(mentor, reset_url)
+            messages.success(request, f"Password reset link has been sent to {mentor.email}.")
+        elif action == 'deactivate':
+            mentor.is_active = False
+            mentor.save()
+            messages.info(request, f"{mentor.full_name} has been deactivated.")
+        elif action == 'reactivate':
+            mentor.is_active = True
+            mentor.save()
+            messages.success(request, f"{mentor.full_name} has been reactivated.")
+        elif action == 'delete':
+            mentor.delete()
+            messages.success(request, f"Mentor {mentor.full_name} has been deleted.")
+            return redirect('admin_mentors')
+        return redirect('admin_mentor_detail', mentor_id=mentor.id)
+
+    context = {
+        'active': 'mentors',
+        'mentor': mentor,
+    }
+    return render(request, 'core/admin_mentor_detail.html', context)
 
 
 @require_admin
@@ -1161,6 +1374,19 @@ def admin_student_detail(request, student_id):
                 messages.info(request, f"Certificate revoked for {student.full_name}.")
             else:
                 messages.info(request, f"{student.full_name} has no certificate to revoke.")
+        elif action == 'reset_password':
+            student.reset_tokens.filter(used=False).update(used=True)
+            token = secrets.token_urlsafe(48)
+            PasswordResetToken.objects.create(
+                student=student,
+                token=token,
+                expires_at=timezone.now() + timezone.timedelta(hours=1),
+            )
+            reset_url = request.build_absolute_uri(
+                reverse('reset_password', kwargs={'token': token})
+            )
+            send_password_reset_email(student, reset_url)
+            messages.success(request, f"Password reset link has been sent to {student.email}.")
         return redirect('admin_student_detail', student_id=student.id)
 
     try:

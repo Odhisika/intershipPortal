@@ -113,6 +113,50 @@ def send_password_reset_email(student, reset_url):
     )
 
 
+def send_mentor_password_reset_email(mentor, reset_url):
+    """Send a password reset link to the mentor's email."""
+    subject = "LuckyTech Innovation Ground — Password Reset Request"
+    content = f"""
+    <h2 style="margin:0 0 8px;color:#1a1a2e;font-size:20px;">Hi {mentor.first_name},</h2>
+    <p style="margin:0 0 20px;color:#444;font-size:15px;line-height:1.7;">
+      A password reset has been requested for your
+      <strong>LuckyTech Innovation Ground</strong> mentor account.
+    </p>
+    <p style="margin:0 0 20px;color:#444;font-size:15px;line-height:1.7;">
+      Click the button below to set a new password. This link expires in <strong>1 hour</strong>.
+    </p>
+
+    <table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td style="border-radius:6px;background-color:#1a1a2e;">
+          <a href="{reset_url}" style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;letter-spacing:0.3px;">Reset Password</a>
+        </td>
+      </tr>
+    </table>
+
+    <div style="background-color:#fff8f0;border-left:4px solid #f0a030;padding:16px 20px;border-radius:0 6px 6px 0;margin-bottom:24px;">
+      <p style="margin:0;color:#886633;font-size:13px;line-height:1.6;">
+        If you did not request this, please ignore this email. Your current password will remain unchanged.
+      </p>
+    </div>
+
+    <p style="margin:20px 0 0;color:#888;font-size:13px;line-height:1.6;">
+      Best regards,<br>
+      <strong style="color:#1a1a2e;">LuckyTech Innovation Ground Team</strong>
+    </p>
+    """
+
+    html_message = _render_email(content)
+    send_mail(
+        subject,
+        strip_tags(html_message),
+        settings.DEFAULT_FROM_EMAIL,
+        [mentor.email],
+        html_message=html_message,
+        fail_silently=True,
+    )
+
+
 def send_mentor_credentials_email(mentor):
     """Send a mentor their generated login credentials."""
     password_display = getattr(mentor, '_raw_password', None)

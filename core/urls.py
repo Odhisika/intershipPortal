@@ -25,6 +25,8 @@ urlpatterns = [
     # Mentor portal
     path('mentor/login/', views.mentor_login, name='mentor_login'),
     path('mentor/logout/', views.mentor_logout, name='mentor_logout'),
+    path('mentor/forgot-password/', views.mentor_forgot_password, name='mentor_forgot_password'),
+    path('mentor/reset-password/<str:token>/', views.mentor_reset_password, name='mentor_reset_password'),
     path('mentor/', views.mentor_dashboard, name='mentor_dashboard'),
     path('mentor/student/<int:student_id>/', views.mentor_student_detail, name='mentor_student_detail'),
     path('mentor/curriculum/', views.mentor_curriculum, name='mentor_curriculum'),
@@ -45,6 +47,7 @@ urlpatterns = [
     path('manage/attendance/', views.admin_attendance, name='admin_attendance'),
     path('manage/assignments/', views.admin_assignments, name='admin_assignments'),
     path('manage/mentors/', views.admin_mentors, name='admin_mentors'),
+    path('manage/mentors/<int:mentor_id>/', views.admin_mentor_detail, name='admin_mentor_detail'),
     path('manage/cohorts/', views.admin_cohorts, name='admin_cohorts'),
     path('manage/curriculum/', views.admin_curriculum, name='admin_curriculum'),
     path('manage/curriculum/<int:course_id>/', views.admin_curriculum, name='admin_curriculum_course'),
