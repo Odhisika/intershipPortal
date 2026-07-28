@@ -40,8 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
         studentClose.addEventListener('click', toggleSidebar);
     }
     
-    // Admin toggle button
-    var adminToggle = document.querySelector('.admin-header .mobile-menu-btn');
+    // Admin toggle button (onclick attribute handles it on admin pages)
+    var adminToggle = document.querySelector('.admin-header .mobile-menu-btn:not([onclick])');
     if (adminToggle) {
         adminToggle.addEventListener('click', function(e) {
             e.preventDefault();
