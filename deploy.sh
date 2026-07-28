@@ -29,6 +29,9 @@ sudo git config --global --add safe.directory /var/www/intern
 
 VENV_DIR="$REPO_DIR/venv"
 
+echo "==> Ensuring venv executables are runnable..."
+sudo chmod +x "$VENV_DIR"/bin/*
+
 echo "==> Installing dependencies..."
 "$VENV_DIR/bin/pip" install -r requirements.txt
 
