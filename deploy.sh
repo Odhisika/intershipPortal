@@ -19,6 +19,8 @@ sudo find /var/www/intern/media -type d -exec chmod 775 {} +
 sudo find /var/www/intern/media -type f -exec chmod 664 {} +
 
 echo "==> Fixing SQLite database permissions..."
+sudo chown lig:www-data /var/www/intern
+sudo chmod 775 /var/www/intern
 sudo touch /var/www/intern/db.sqlite3
 sudo chown lig:www-data /var/www/intern/db.sqlite3
 sudo chmod 664 /var/www/intern/db.sqlite3
