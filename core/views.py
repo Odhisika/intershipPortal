@@ -268,28 +268,48 @@ def forgot_password(request):
         email = request.POST.get('email', '').strip().lower()
         student = Student.objects.filter(email=email).first()
 
-        if student:
-            # Invalidate existing unused tokens for this student
-            student.reset_tokens.filter(used=False).update(used=True)
-
-            token = secrets.token_urlsafe(48)
-            PasswordResetToken.objects.create(
-                student=student,
-                token=token,
-                expires_at=timezone.now() + timezone.timedelta(hours=1),
+        if not student:
+            messages.error(
+                request,
+                "We couldn't find an account with that email address. "
+                "Please check your email or register a new account.",
             )
+            return render(request, 'core/forgot_password.html', {'submitted': True})
 
-            reset_url = request.build_absolute_uri(
-                reverse('reset_password', kwargs={'token': token})
+        # Per-email rate limit: max 2 resets per hour
+        rate_key = f"password_reset:{email}"
+        resets_sent = cache.get(rate_key, 0)
+        if resets_sent >= 2:
+            messages.error(
+                request,
+                "You've already requested a reset link twice this hour. "
+                "Please wait before trying again.",
             )
-            send_password_reset_email(student, reset_url)
+            return render(request, 'core/forgot_password.html', {'submitted': True})
+
+        # Invalidate existing unused tokens for this student
+        student.reset_tokens.filter(used=False).update(used=True)
+
+        token = secrets.token_urlsafe(48)
+        PasswordResetToken.objects.create(
+            student=student,
+            token=token,
+            expires_at=timezone.now() + timezone.timedelta(hours=1),
+        )
+
+        reset_url = request.build_absolute_uri(
+            reverse('reset_password', kwargs={'token': token})
+        )
+        send_password_reset_email(student, reset_url)
+
+        cache.set(rate_key, resets_sent + 1, 3600)
 
         messages.success(
             request,
-            "If an account exists with that email address, a password "
-            "reset link has been sent to it."
+            "A password reset link has been sent to your email. "
+            "Please check your inbox to reset your password."
         )
-        return redirect('forgot_password')
+        return render(request, 'core/forgot_password.html', {'submitted': True})
 
     return render(request, 'core/forgot_password.html')
 
@@ -345,25 +365,45 @@ def mentor_forgot_password(request):
         email = request.POST.get('email', '').strip().lower()
         mentor = Mentor.objects.filter(email=email).first()
 
-        if mentor:
-            mentor.reset_tokens.filter(used=False).update(used=True)
-            token = secrets.token_urlsafe(48)
-            PasswordResetToken.objects.create(
-                mentor=mentor,
-                token=token,
-                expires_at=timezone.now() + timezone.timedelta(hours=1),
+        if not mentor:
+            messages.error(
+                request,
+                "We couldn't find an account with that email address. "
+                "Please check your email or contact the administrator.",
             )
-            reset_url = request.build_absolute_uri(
-                reverse('mentor_reset_password', kwargs={'token': token})
+            return render(request, 'core/mentor_forgot_password.html', {'submitted': True})
+
+        # Per-email rate limit: max 2 resets per hour
+        rate_key = f"mentor_password_reset:{email}"
+        resets_sent = cache.get(rate_key, 0)
+        if resets_sent >= 2:
+            messages.error(
+                request,
+                "You've already requested a reset link twice this hour. "
+                "Please wait before trying again.",
             )
-            send_mentor_password_reset_email(mentor, reset_url)
+            return render(request, 'core/mentor_forgot_password.html', {'submitted': True})
+
+        mentor.reset_tokens.filter(used=False).update(used=True)
+        token = secrets.token_urlsafe(48)
+        PasswordResetToken.objects.create(
+            mentor=mentor,
+            token=token,
+            expires_at=timezone.now() + timezone.timedelta(hours=1),
+        )
+        reset_url = request.build_absolute_uri(
+            reverse('mentor_reset_password', kwargs={'token': token})
+        )
+        send_mentor_password_reset_email(mentor, reset_url)
+
+        cache.set(rate_key, resets_sent + 1, 3600)
 
         messages.success(
             request,
-            "If an account exists with that email address, a password "
-            "reset link has been sent to it."
+            "A password reset link has been sent to your email. "
+            "Please check your inbox to reset your password."
         )
-        return redirect('mentor_forgot_password')
+        return render(request, 'core/mentor_forgot_password.html', {'submitted': True})
 
     return render(request, 'core/mentor_forgot_password.html')
 
