@@ -26,7 +26,7 @@ function toggleAdminSidebar() {
 // Auto-attach click handlers if elements exist
 document.addEventListener('DOMContentLoaded', () => {
     // Student portal toggle button
-    var studentToggle = document.querySelector('[onclick="toggleSidebar()"]');
+    var studentToggle = document.querySelector('.mobile-menu-btn');
     if (studentToggle) {
         studentToggle.addEventListener('click', function(e) {
             e.preventDefault();
