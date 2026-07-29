@@ -22,6 +22,7 @@ from .emails import (
     send_credentials_email, send_password_reset_email,
     send_mentor_credentials_email, send_mentor_password_reset_email,
     send_announcement_email, send_certificate_ready_email,
+    send_acceptance_email,
 )
 from . import paystack
 from .pdfs import generate_certificate_pdf, generate_receipt_pdf
@@ -552,6 +553,13 @@ def payment_callback(request):
             payment.paid_at = timezone.now()
         payment.amount = data.get('amount', 0) / 100  # pesewas -> GHS
         payment.save()
+
+        student = payment.student
+        if student.has_paid_required_amount and not student.is_approved:
+            student.is_approved = True
+            student.save()
+            send_acceptance_email(student)
+
         messages.success(request, "Payment successful! Please log in to view your updated dashboard.")
     else:
         payment.status = 'failed'
@@ -1377,7 +1385,8 @@ def admin_student_detail(request, student_id):
         if action == 'approve':
             student.is_approved = True
             student.save()
-            messages.success(request, f"{student.full_name} has been approved.")
+            send_acceptance_email(student)
+            messages.success(request, f"{student.full_name} has been approved. Acceptance email sent.")
         elif action == 'unapprove':
             student.is_approved = False
             student.save()
