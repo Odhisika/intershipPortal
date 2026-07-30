@@ -29,9 +29,9 @@ function initAutoSubmitForms() {
         });
     }
     
-    // Mentor curriculum course filter
+    // Mentor curriculum course filter – only on forms that opt in
     var courseFilter = document.getElementById('course');
-    if (courseFilter && courseFilter.form) {
+    if (courseFilter && courseFilter.form && courseFilter.form.hasAttribute('data-auto-submit')) {
         courseFilter.addEventListener('change', function() {
             this.form.submit();
         });

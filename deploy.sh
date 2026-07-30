@@ -11,6 +11,7 @@ echo "==> Fixing ownership and permissions..."
 sudo chown -R lig:www-data /var/www/intern --exclude=venv --exclude=media 2>/dev/null || true
 sudo find /var/www/intern -type d -not -path "*/media/*" -not -path "*/venv/*" -exec chmod 755 {} +
 sudo find /var/www/intern -type f -not -path "*/media/*" -not -path "*/venv/*" -exec chmod 664 {} +
+sudo chmod +x /var/www/intern/deploy.sh
 
 echo "==> Ensuring media directories exist and are writable..."
 sudo mkdir -p /var/www/intern/media/attachment_letters

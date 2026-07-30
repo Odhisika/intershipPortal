@@ -766,7 +766,10 @@ def mentor_student_detail(request, mentor, student_id):
 
         assignment_id = request.POST.get('assignment_id')
         feedback = request.POST.get('feedback', '').strip()
-        assignment = get_object_or_404(Assignment, pk=assignment_id, student=student)
+        assignment = get_object_or_404(
+            Assignment, pk=assignment_id, student=student,
+            week__course__in=mentor.courses.all(),
+        )
         assignment.feedback = feedback
         assignment.status = 'reviewed'
         assignment.reviewed_at = timezone.now()
@@ -774,9 +777,12 @@ def mentor_student_detail(request, mentor, student_id):
         messages.success(request, f"Feedback saved for Week {assignment.week.week_number}.")
         return redirect('mentor_student_detail', student_id=student.id)
 
-    assignments = student.assignments.all()
-    attendance_records = student.attendance_records.all()[:30]
-    courses = student.all_courses
+    mentor_course_ids = mentor.courses.values_list('id', flat=True)
+    assignments = student.assignments.filter(week__course__in=mentor_course_ids)
+    attendance_records = student.attendance_records.filter(
+        week__course__in=mentor_course_ids
+    )[:30]
+    courses = [c for c in student.all_courses if c.id in mentor_course_ids]
     completed_ids = set(student.completed_weeks.values_list('id', flat=True))
 
     # Build week data per course
@@ -954,7 +960,8 @@ def mentor_attendance(request, mentor):
     """Show all pending attendance records for the mentor's students."""
     students = mentor.students.all()
     pending_records = AttendanceRecord.objects.filter(
-        student__in=students, status='pending'
+        student__in=students, status='pending',
+        week__course__in=mentor.courses.all(),
     ).select_related('student', 'week').order_by('-date')
 
     context = {
@@ -969,6 +976,7 @@ def mentor_attendance_approve(request, mentor, record_id):
     record = get_object_or_404(
         AttendanceRecord, pk=record_id, status='pending',
         student__in=mentor.students.all(),
+        week__course__in=mentor.courses.all(),
     )
     record.status = 'present'
     record.save()
@@ -981,6 +989,7 @@ def mentor_attendance_reject(request, mentor, record_id):
     record = get_object_or_404(
         AttendanceRecord, pk=record_id, status='pending',
         student__in=mentor.students.all(),
+        week__course__in=mentor.courses.all(),
     )
     record.status = 'absent'
     record.save()
