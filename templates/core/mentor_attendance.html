@@ -50,11 +50,11 @@
                 <form method="post" action="{% url 'mentor_attendance_toggle_today' %}" style="display:inline;">
                   {% csrf_token %}
                   {% if today_locked %}
-                    <button type="submit" class="btn btn-primary" style="padding:6px 14px; font-size:13px;">
+                    <button type="submit" name="action" value="open" class="btn btn-primary" style="padding:6px 14px; font-size:13px;">
                       <i class="fa-solid fa-unlock"></i> Open Attendance
                     </button>
                   {% else %}
-                    <button type="submit" class="btn btn-outline" style="padding:6px 14px; font-size:13px; border-color:#fca5a5; color:#dc2626;">
+                    <button type="submit" name="action" value="lock" class="btn btn-outline" style="padding:6px 14px; font-size:13px; border-color:#fca5a5; color:#dc2626;">
                       <i class="fa-solid fa-lock"></i> Lock Today
                     </button>
                   {% endif %}
@@ -75,11 +75,11 @@
                 <form method="post" action="{% url 'mentor_attendance_toggle_week' item.week.id %}" style="display:inline;">
                   {% csrf_token %}
                   {% if item.locked %}
-                    <button type="submit" class="btn btn-primary" style="padding:6px 14px; font-size:13px;">
+                    <button type="submit" name="action" value="open" class="btn btn-primary" style="padding:6px 14px; font-size:13px;">
                       <i class="fa-solid fa-unlock"></i> Open Week
                     </button>
                   {% else %}
-                    <button type="submit" class="btn btn-outline" style="padding:6px 14px; font-size:13px; border-color:#fca5a5; color:#dc2626;">
+                    <button type="submit" name="action" value="lock" class="btn btn-outline" style="padding:6px 14px; font-size:13px; border-color:#fca5a5; color:#dc2626;">
                       <i class="fa-solid fa-lock"></i> Lock Week
                     </button>
                   {% endif %}
@@ -122,8 +122,11 @@
             <label class="form-label">Date</label>
             <input type="date" name="date" class="form-input date-input" style="padding:10px 12px; border:1px solid #334155; background:#0b1220; color:#e2e8f0; border-radius:8px;" required>
           </div>
-          <button type="submit" class="btn btn-outline" style="padding:10px 18px;">
-            <i class="fa-solid fa-toggle-on"></i> Toggle Lock
+          <button type="submit" name="action" value="open" class="btn btn-primary" style="padding:10px 18px;">
+            <i class="fa-solid fa-unlock"></i> Open Day
+          </button>
+          <button type="submit" name="action" value="lock" class="btn btn-outline" style="padding:10px 18px; border-color:#fca5a5; color:#dc2626;">
+            <i class="fa-solid fa-lock"></i> Lock Day
           </button>
         </form>
       </div>
