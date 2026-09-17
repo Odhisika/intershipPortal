@@ -105,17 +105,76 @@
     </section>
 
     <section class="admin-table-section">
-      <h3>Attendance</h3>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <h3 style="margin:0;">Attendance Calendar</h3>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <a href="?month={{ prev_month|date:'Y-m' }}" class="btn btn-outline" style="padding:4px 12px; font-size:13px;"><i class="fa-solid fa-chevron-left"></i></a>
+          <strong style="min-width:130px; text-align:center;">{{ calendar_month|date:"F Y" }}</strong>
+          <a href="?month={{ next_month|date:'Y-m' }}" class="btn btn-outline" style="padding:4px 12px; font-size:13px;"><i class="fa-solid fa-chevron-right"></i></a>
+        </div>
+      </div>
+
+      <div class="weekday-summary">
+        <span class="weekday-chip chip-present"><i class="fa-solid fa-check"></i> Present {{ weekday_present }}</span>
+        <span class="weekday-chip chip-absent"><i class="fa-solid fa-xmark"></i> Absent {{ weekday_absent }}</span>
+        <span class="weekday-chip chip-pending"><i class="fa-solid fa-clock"></i> Pending {{ weekday_pending }}</span>
+        <span class="weekday-chip chip-excused"><i class="fa-solid fa-shield"></i> Excused {{ weekday_excused }}</span>
+      </div>
+
+      <div class="attendance-calendar">
+        <table class="calendar-table">
+          <thead>
+            <tr>
+              <th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for week in calendar_weeks %}
+            <tr>
+              {% for d in week %}
+              <td class="cal-cell
+                {% if not d.in_month %}cal-out{% endif %}
+                {% if d.is_weekend %}cal-weekend{% else %}cal-weekday{% endif %}
+                {% if d.is_today %}cal-today{% endif %}">
+                <div class="cal-daynum">{{ d.day }}</div>
+                {% if d.in_month and not d.is_future %}
+                  {% if d.status == "present" %}
+                    <span class="cal-dot cal-present" title="Present"><i class="fa-solid fa-check"></i></span>
+                  {% elif d.status == "absent" %}
+                    <span class="cal-dot cal-absent" title="Absent"><i class="fa-solid fa-xmark"></i></span>
+                  {% elif d.status == "pending" %}
+                    <span class="cal-dot cal-pending" title="Pending"><i class="fa-solid fa-clock"></i></span>
+                  {% elif d.status == "excused" %}
+                    <span class="cal-dot cal-excused" title="Excused"><i class="fa-solid fa-shield"></i></span>
+                  {% else %}
+                    <span class="cal-dot cal-none" title="No record">-</span>
+                  {% endif %}
+                {% endif %}
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p style="color:#94a3b8; font-size:12px; margin-top:10px;">
+        Weekdays are highlighted; weekends are dimmed. Each mark tracks that day's attendance.
+      </p>
+    </section>
+
+    <section class="admin-table-section">
+      <h3>Attendance Records</h3>
       {% if attendance_records %}
       <div class="history-table-wrapper">
         <table class="history-table">
           <thead>
-            <tr><th>Date</th><th>Week</th><th>Status</th><th></th></tr>
+            <tr><th>Date</th><th>Day</th><th>Week</th><th>Status</th><th></th></tr>
           </thead>
           <tbody>
             {% for record in attendance_records %}
             <tr>
               <td>{{ record.date|date:"M d, Y" }}</td>
+              <td>{% if record.date.weekday < 5 %}<strong>{{ record.date|date:"D" }}</strong>{% else %}{{ record.date|date:"D" }}{% endif %}</td>
               <td>{% if record.week %}Week {{ record.week.week_number }}{% else %}-{% endif %}</td>
               <td>
                 {% if record.status == "present" %}

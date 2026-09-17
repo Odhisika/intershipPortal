@@ -1,6 +1,7 @@
 import uuid
 import secrets
 import re
+import calendar as calendar_module
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -808,9 +809,7 @@ def mentor_student_detail(request, mentor, student_id):
 
     mentor_course_ids = mentor.courses.values_list('id', flat=True)
     assignments = student.assignments.filter(week__course__in=mentor_course_ids)
-    attendance_records = student.attendance_records.filter(
-        week__course__in=mentor_course_ids
-    )[:30]
+    attendance_records = student.attendance_records.all()[:30]
     courses = [c for c in student.all_courses if c.id in mentor_course_ids]
     completed_ids = set(student.completed_weeks.values_list('id', flat=True))
 
@@ -828,12 +827,59 @@ def mentor_student_detail(request, mentor, student_id):
             'weeks': week_list,
         })
 
+    # --- Attendance calendar for the selected month ---
+    today = timezone.now().date()
+    month_str = request.GET.get('month', '')
+    try:
+        year, month = (int(p) for p in month_str.split('-'))
+        cal_month = timezone.datetime(year, month, 1).date()
+    except (ValueError, TypeError):
+        cal_month = today.replace(day=1)
+
+    status_by_date = {
+        r.date: r.status
+        for r in student.attendance_records.filter(date__year=cal_month.year, date__month=cal_month.month)
+    }
+    calendar_weeks = []
+    for week in calendar_module.Calendar(firstweekday=6).monthdatescalendar(cal_month.year, cal_month.month):
+        row = []
+        for d in week:
+            row.append({
+                'date': d,
+                'day': d.day,
+                'in_month': d.month == cal_month.month,
+                'is_weekend': d.weekday() >= 5,
+                'is_today': d == today,
+                'is_future': d > today,
+                'status': status_by_date.get(d),
+            })
+        calendar_weeks.append(row)
+
+    first_of_month = cal_month
+    prev_month = (first_of_month - timezone.timedelta(days=1)).replace(day=1)
+    next_month = (first_of_month + timezone.timedelta(days=32)).replace(day=1)
+
+    # Weekday summary for this month
+    month_records = [r for r in status_by_date.items() if r[0].weekday() < 5]
+    weekday_present = sum(1 for d, s in month_records if s == 'present')
+    weekday_absent = sum(1 for d, s in month_records if s == 'absent')
+    weekday_pending = sum(1 for d, s in month_records if s == 'pending')
+    weekday_excused = sum(1 for d, s in month_records if s == 'excused')
+
     context = {
         'mentor': mentor,
         'student': student,
         'assignments': assignments,
         'attendance_records': attendance_records,
         'courses_weeks': courses_weeks,
+        'calendar_weeks': calendar_weeks,
+        'calendar_month': cal_month,
+        'prev_month': prev_month,
+        'next_month': next_month,
+        'weekday_present': weekday_present,
+        'weekday_absent': weekday_absent,
+        'weekday_pending': weekday_pending,
+        'weekday_excused': weekday_excused,
     }
     return render(request, 'core/mentor_student_detail.html', context)
 
@@ -1022,39 +1068,15 @@ def _unlock_date(target):
             lock.delete()
 
 
-def _unlock_week(week):
-    """Remove the week lock and any day locks falling inside that week."""
-    anchor = _training_anchor()
-    start, end = _week_date_range(week, anchor)
-    AttendanceLock.objects.filter(week=week).delete()
-    AttendanceLock.objects.filter(date__range=(start, end)).delete()
-
-
 @require_mentor_login
 def mentor_attendance(request, mentor):
-    """Show all pending attendance requests (visible to every mentor) and lock controls."""
+    """Show all pending attendance requests (visible to every mentor) and day lock controls."""
     students = mentor.students.all()
     today = timezone.now().date()
     pending_records = AttendanceRecord.objects.filter(
         status='pending',
     ).select_related('student', 'week').order_by('-date')
 
-    weeks = CurriculumWeek.objects.filter(
-        course__mentors=mentor,
-    ).select_related('course').order_by('course', 'week_number')
-
-    week_ids = weeks.values_list('id', flat=True)
-    locked_week_ids = AttendanceLock.objects.filter(
-        week_id__in=week_ids,
-    ).values_list('week_id', flat=True)
-
-    weeks_data = [
-        {
-            'week': w,
-            'locked': w.id in locked_week_ids,
-        }
-        for w in weeks
-    ]
     today_locked = _date_is_locked(today)
 
     recent_records = AttendanceRecord.objects.exclude(
@@ -1076,7 +1098,6 @@ def mentor_attendance(request, mentor):
         'mentor': mentor,
         'pending_records': pending_records,
         'recent_records': recent_records,
-        'weeks_data': weeks_data,
         'today': today,
         'today_locked': today_locked,
         'locked_dates': locked_dates,
@@ -1143,29 +1164,6 @@ def mentor_attendance_set_start(request, mentor):
             request,
             f"Training start date set to {start.strftime('%b %d, %Y')}. Week mapping updated for backfilled attendance.",
         )
-    return redirect('mentor_attendance')
-
-
-@require_mentor_login
-def mentor_attendance_toggle_week(request, mentor, week_id):
-    """Open or lock attendance for an entire week."""
-    week = get_object_or_404(
-        CurriculumWeek, pk=week_id, course__mentors=mentor,
-    )
-    if request.method == 'POST':
-        action = request.POST.get('action', '')
-        if action == 'open' or (not action and AttendanceLock.objects.filter(week=week).exists()):
-            _unlock_week(week)
-            messages.success(
-                request,
-                f"Attendance opened for Week {week.week_number} ({week.course.name}).",
-            )
-        else:
-            AttendanceLock.objects.create(week=week, locked_by=mentor)
-            messages.success(
-                request,
-                f"Attendance locked for Week {week.week_number} ({week.course.name}).",
-            )
     return redirect('mentor_attendance')
 
 

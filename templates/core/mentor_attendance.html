@@ -61,32 +61,6 @@
                 </form>
               </td>
             </tr>
-            {% for item in weeks_data %}
-            <tr>
-              <td>Week {{ item.week.week_number }} - {{ item.week.title }} ({{ item.week.course.name }})</td>
-              <td>
-                {% if item.locked %}
-                  <span class="status-pill status-pending">Locked</span>
-                {% else %}
-                  <span class="status-pill status-success">Open</span>
-                {% endif %}
-              </td>
-              <td>
-                <form method="post" action="{% url 'mentor_attendance_toggle_week' item.week.id %}" style="display:inline;">
-                  {% csrf_token %}
-                  {% if item.locked %}
-                    <button type="submit" name="action" value="open" class="btn btn-primary" style="padding:6px 14px; font-size:13px;">
-                      <i class="fa-solid fa-unlock"></i> Open Week
-                    </button>
-                  {% else %}
-                    <button type="submit" name="action" value="lock" class="btn btn-outline" style="padding:6px 14px; font-size:13px; border-color:#fca5a5; color:#dc2626;">
-                      <i class="fa-solid fa-lock"></i> Lock Week
-                    </button>
-                  {% endif %}
-                </form>
-              </td>
-            </tr>
-            {% endfor %}
           </tbody>
         </table>
       </div>

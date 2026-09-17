@@ -40,7 +40,6 @@ urlpatterns = [
     path('mentor/attendance/lock-today/', views.mentor_attendance_toggle_today, name='mentor_attendance_toggle_today'),
     path('mentor/attendance/toggle-date/', views.mentor_attendance_toggle_date, name='mentor_attendance_toggle_date'),
     path('mentor/attendance/set-start/', views.mentor_attendance_set_start, name='mentor_attendance_set_start'),
-    path('mentor/attendance/lock-week/<int:week_id>/', views.mentor_attendance_toggle_week, name='mentor_attendance_toggle_week'),
     path('mentor/attendance/<int:record_id>/approve/', views.mentor_attendance_approve, name='mentor_attendance_approve'),
     path('mentor/attendance/<int:record_id>/reject/', views.mentor_attendance_reject, name='mentor_attendance_reject'),
 
