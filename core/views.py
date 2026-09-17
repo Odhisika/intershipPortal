@@ -15,8 +15,8 @@ from django_ratelimit.decorators import ratelimit
 
 from .models import (
     Student, Payment, Cohort, Course, CurriculumWeek, Assignment,
-    AttendanceRecord, Announcement, Mentor, Certificate, LearningMaterial,
-    PasswordResetToken,
+    AttendanceRecord, AttendanceLock, Announcement, Mentor, Certificate,
+    LearningMaterial, PasswordResetToken,
 )
 from .emails import (
     send_credentials_email, send_password_reset_email,
@@ -466,11 +466,14 @@ def dashboard(request, student):
     except Certificate.DoesNotExist:
         certificate = None
 
+    attendance_records = student.attendance_records.all()[:20]
+
     context = {
         'student': student,
         'config': config,
         'announcements': announcements,
         'certificate': certificate,
+        'attendance_records': attendance_records,
     }
     return render(request, 'core/dashboard.html', context)
 
@@ -634,20 +637,42 @@ def course_outline(request, student):
 
 @require_login
 def attendance_view(request, student):
-    """Students can request check-in; mentor must approve."""
+    """Students can request check-in for any open day (today or past backfill days)."""
     today = timezone.now().date()
     course = student.course
-    current_week = course.weeks.first() if course else None
+    start = student.programme_start_date
+    locked = AttendanceLock.is_locked(today, student.week_for_date(today))
 
     if request.method == 'POST':
+        date_str = request.POST.get('date', '').strip()
+        selected = None
+        if date_str:
+            try:
+                selected = timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
+            except (ValueError, TypeError):
+                selected = None
+        selected = selected or today
+
+        if selected > today:
+            messages.error(request, "You cannot request attendance for a future date.")
+            return redirect('attendance')
+        if selected < start:
+            selected = start
+
+        week = student.week_for_date(selected)
+        if AttendanceLock.is_locked(selected, week):
+            messages.error(request, "Attendance is locked for that date. Please try a different day.")
+            return redirect('attendance')
+
         record, created = AttendanceRecord.objects.get_or_create(
-            student=student, date=today,
-            defaults={'status': 'pending', 'week': current_week},
+            student=student, date=selected,
+            defaults={'status': 'pending', 'week': week},
         )
         if created:
-            messages.success(request, "Check-in request sent! Your mentor will confirm your attendance.")
+            messages.success(request, f"Check-in request sent for {selected.strftime('%b %d, %Y')}! Your mentor will confirm.")
         else:
-            messages.success(request, "You've already requested check-in for today.")
+            status_label = dict(AttendanceRecord.STATUS_CHOICES).get(record.status, record.status)
+            messages.info(request, f"You already have an attendance record for {selected.strftime('%b %d, %Y')} ({status_label}).")
         return redirect('attendance')
 
     records = student.attendance_records.all()[:30]
@@ -658,7 +683,9 @@ def attendance_view(request, student):
         'records': records,
         'already_checked_in': already_checked_in,
         'today': today,
+        'start': start,
         'attendance_percentage': student.attendance_percentage,
+        'attendance_locked': locked,
     }
     return render(request, 'core/attendance.html', context)
 
@@ -734,9 +761,14 @@ def mentor_logout(request):
 @require_mentor_login
 def mentor_dashboard(request, mentor):
     students = mentor.students.all()
+    course_filter = db_models.Q(week__course__in=mentor.courses.all()) | db_models.Q(week__isnull=True)
+    attendance_records = AttendanceRecord.objects.filter(
+        student__in=students,
+    ).filter(course_filter).select_related('student', 'week')[:30]
     context = {
         'mentor': mentor,
         'students': students,
+        'attendance_records': attendance_records,
     }
     return render(request, 'core/mentor_dashboard.html', context)
 
@@ -959,25 +991,155 @@ def mentor_change_password(request, mentor):
 def mentor_attendance(request, mentor):
     """Show all pending attendance records for the mentor's students."""
     students = mentor.students.all()
+    today = timezone.now().date()
+    course_filter = db_models.Q(week__course__in=mentor.courses.all()) | db_models.Q(week__isnull=True)
     pending_records = AttendanceRecord.objects.filter(
         student__in=students, status='pending',
-        week__course__in=mentor.courses.all(),
-    ).select_related('student', 'week').order_by('-date')
+    ).filter(course_filter).select_related('student', 'week').order_by('-date')
+
+    weeks = CurriculumWeek.objects.filter(
+        course__mentors=mentor,
+    ).select_related('course').order_by('course', 'week_number')
+
+    week_ids = weeks.values_list('id', flat=True)
+    locked_week_ids = AttendanceLock.objects.filter(
+        week_id__in=week_ids,
+    ).values_list('week_id', flat=True)
+
+    weeks_data = [
+        {
+            'week': w,
+            'locked': w.id in locked_week_ids,
+        }
+        for w in weeks
+    ]
+    today_locked = AttendanceLock.objects.filter(date=today).exists()
+
+    recent_records = AttendanceRecord.objects.filter(
+        student__in=students,
+    ).filter(course_filter).exclude(status='pending').select_related('student', 'week')[:20]
+
+    locked_dates = AttendanceLock.objects.filter(
+        date__isnull=False,
+    ).order_by('date').values_list('date', flat=True)
+
+    default = Cohort.get_default()
+    start_date = default.start_date
+    if not start_date:
+        sample = students.first()
+        if sample:
+            start_date = sample.programme_start_date
 
     context = {
         'mentor': mentor,
         'pending_records': pending_records,
+        'recent_records': recent_records,
+        'weeks_data': weeks_data,
+        'today': today,
+        'today_locked': today_locked,
+        'locked_dates': locked_dates,
+        'start_date': start_date,
     }
     return render(request, 'core/mentor_attendance.html', context)
 
 
 @require_mentor_login
-def mentor_attendance_approve(request, mentor, record_id):
-    record = get_object_or_404(
-        AttendanceRecord, pk=record_id, status='pending',
-        student__in=mentor.students.all(),
-        week__course__in=mentor.courses.all(),
+def mentor_attendance_toggle_today(request, mentor):
+    """Lock or unlock attendance for today's date."""
+    today = timezone.now().date()
+    if request.method == 'POST':
+        lock = AttendanceLock.objects.filter(date=today).first()
+        if lock:
+            lock.delete()
+            messages.success(request, f"Attendance unlocked for {today.strftime('%b %d, %Y')}. Students can check in now.")
+        else:
+            AttendanceLock.objects.create(
+                date=today,
+                locked_by=mentor,
+            )
+            messages.success(request, f"Attendance locked for {today.strftime('%b %d, %Y')}. Students cannot check in.")
+    return redirect('mentor_attendance')
+
+
+@require_mentor_login
+def mentor_attendance_toggle_date(request, mentor):
+    """Lock or unlock attendance for a specific date (including past days)."""
+    if request.method == 'POST':
+        date_str = request.POST.get('date', '').strip()
+        try:
+            target = timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            messages.error(request, "Please choose a valid date.")
+            return redirect('mentor_attendance')
+
+        lock = AttendanceLock.objects.filter(date=target).first()
+        if lock:
+            lock.delete()
+            messages.success(request, f"Attendance unlocked for {target.strftime('%b %d, %Y')}. Students can check in.")
+        else:
+            AttendanceLock.objects.create(date=target, locked_by=mentor)
+            messages.success(request, f"Attendance locked for {target.strftime('%b %d, %Y')}. Students cannot check in.")
+    return redirect('mentor_attendance')
+
+
+@require_mentor_login
+def mentor_attendance_set_start(request, mentor):
+    """Set the training start date used to map dates to weeks."""
+    if request.method == 'POST':
+        date_str = request.POST.get('date', '').strip()
+        try:
+            start = timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            messages.error(request, "Please choose a valid date.")
+            return redirect('mentor_attendance')
+
+        cohort_ids = list(mentor.students.values_list('cohort_id', flat=True))
+        cohort_ids = [c for c in cohort_ids if c]
+        default = Cohort.get_default()
+        if default.pk not in cohort_ids:
+            cohort_ids.append(default.pk)
+        Cohort.objects.filter(pk__in=cohort_ids).update(start_date=start)
+
+        messages.success(
+            request,
+            f"Training start date set to {start.strftime('%b %d, %Y')}. Week mapping updated for backfilled attendance.",
+        )
+    return redirect('mentor_attendance')
+
+
+@require_mentor_login
+def mentor_attendance_toggle_week(request, mentor, week_id):
+    """Lock or unlock attendance for an entire week."""
+    week = get_object_or_404(
+        CurriculumWeek, pk=week_id, course__mentors=mentor,
     )
+    if request.method == 'POST':
+        lock = AttendanceLock.objects.filter(week=week).first()
+        if lock:
+            lock.delete()
+            messages.success(
+                request,
+                f"Attendance unlocked for Week {week.week_number} ({week.course.name}).",
+            )
+        else:
+            AttendanceLock.objects.create(week=week, locked_by=mentor)
+            messages.success(
+                request,
+                f"Attendance locked for Week {week.week_number} ({week.course.name}).",
+            )
+    return redirect('mentor_attendance')
+
+
+@require_mentor_login
+def mentor_attendance_approve(request, mentor, record_id):
+    record = AttendanceRecord.objects.filter(
+        pk=record_id, status='pending', student__in=mentor.students.all(),
+    ).filter(
+        db_models.Q(week__course__in=mentor.courses.all()) | db_models.Q(week__isnull=True),
+    ).first()
+    if not record:
+        messages.error(request, "Attendance record not found or not available to you.")
+        return redirect('mentor_attendance')
     record.status = 'present'
     record.save()
     messages.success(request, f"Attendance approved for {record.student.full_name} on {record.date}.")
@@ -986,11 +1148,13 @@ def mentor_attendance_approve(request, mentor, record_id):
 
 @require_mentor_login
 def mentor_attendance_reject(request, mentor, record_id):
-    record = get_object_or_404(
-        AttendanceRecord, pk=record_id, status='pending',
-        student__in=mentor.students.all(),
-        week__course__in=mentor.courses.all(),
-    )
+    record = AttendanceRecord.objects.filter(
+        pk=record_id, status='pending', student__in=mentor.students.all(),
+    ).filter(
+        db_models.Q(week__course__in=mentor.courses.all()) | db_models.Q(week__isnull=True),
+    ).first()
+    if not record:
+        return redirect('mentor_attendance')
     record.status = 'absent'
     record.save()
     messages.success(request, f"Attendance rejected for {record.student.full_name} on {record.date}.")

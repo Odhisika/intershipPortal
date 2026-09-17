@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Student, Payment, Cohort, Course, CurriculumWeek, Assignment,
-    AttendanceRecord, Announcement, Mentor, Certificate,
+    AttendanceRecord, AttendanceLock, Announcement, Mentor, Certificate,
 )
 
 
@@ -52,6 +52,12 @@ class AttendanceRecordAdmin(admin.ModelAdmin):
     list_display = ('student', 'date', 'status', 'week')
     list_filter = ('status', 'date')
     search_fields = ('student__student_id', 'student__full_name')
+
+
+@admin.register(AttendanceLock)
+class AttendanceLockAdmin(admin.ModelAdmin):
+    list_display = ('date', 'week', 'locked_by', 'created_at')
+    list_filter = ('date', 'week__course')
 
 
 @admin.register(Announcement)

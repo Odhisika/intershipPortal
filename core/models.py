@@ -206,6 +206,49 @@ class AttendanceRecord(models.Model):
         return f"{self.student.student_id} - {self.date} ({self.status})"
 
 
+class AttendanceLock(models.Model):
+    """A mentor lock that prevents students from checking in for a day or week."""
+
+    date = models.DateField(
+        null=True, blank=True,
+        help_text="Lock attendance for this specific day.",
+    )
+    week = models.ForeignKey(
+        CurriculumWeek, on_delete=models.CASCADE, related_name='attendance_locks',
+        null=True, blank=True,
+        help_text="Lock attendance for this entire week.",
+    )
+    locked_by = models.ForeignKey('Mentor', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        if self.week:
+            return f"Week {self.week.week_number} locked ({self.week.course.name})"
+        return f"{self.date} locked"
+
+    @classmethod
+    def is_locked(cls, date, week=None):  # noqa: A002
+        """True if attendance is locked for the given day or week."""
+        if cls.objects.filter(date=date).exists():
+            return True
+        if week and cls.objects.filter(week=week).exists():
+            return True
+        return False
+
+    @classmethod
+    def unlock(cls, date=None, week=None):
+        """Remove lock(s) for the given day and/or week."""
+        query = models.Q()
+        if date:
+            query |= models.Q(date=date)
+        if week:
+            query |= models.Q(week=week)
+        return cls.objects.filter(query).delete()
+
+
 # ---------------------------------------------------------------------------
 # Announcements
 # ---------------------------------------------------------------------------
@@ -376,6 +419,30 @@ class Student(models.Model):
         if self.department:
             return Course.get_for_department(self.department)
         return None
+
+    @property
+    def programme_start_date(self):
+        """Anchor date marking the start of the programme, used to map dates to weeks."""
+        cohort = self.cohort or Cohort.get_default()
+        if cohort.start_date:
+            return cohort.start_date
+        earliest = cohort.students.order_by('created_at').values_list('created_at', flat=True).first()
+        if earliest:
+            return timezone.localdate(earliest)
+        return timezone.localdate(self.created_at)
+
+    def week_for_date(self, date):  # noqa: A002
+        """Resolve the CurriculumWeek (for the student's course) a given date falls in."""
+        course = self.course
+        if not course:
+            return None
+        week_number = ((date - self.programme_start_date).days // 7) + 1
+        if week_number < 1:
+            week_number = 1
+        max_week = course.weeks.aggregate(m=models.Max('week_number'))['m']
+        if max_week and week_number > max_week:
+            week_number = max_week
+        return course.weeks.filter(week_number=week_number).first()
 
     @property
     def all_courses(self):

@@ -1416,6 +1416,25 @@ a {
   color: var(--color-accent);
 }
 
+.checkin-pending {
+  color: #fbbf24;
+}
+
+.date-input {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.85;
+  filter: invert(0.85);
+}
+
+.date-input::-webkit-date-and-time-value {
+  text-align: left;
+}
+
 /* ====== Admin nav ====== */
 .admin-nav {
   display: flex;

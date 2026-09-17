@@ -9,21 +9,28 @@
 </div>
 
 <div class="checkin-card">
-  {% if already_checked_in %}
-    <div class="checkin-status checkin-done">
-      <i class="fa-solid fa-circle-check"></i> Request submitted for {{ today|date:"M d, Y" }}. Awaiting mentor approval.
-    </div>
-  {% else %}
-    <form method="post">
-      {% csrf_token %}
-      <p style="margin-bottom:16px; color:#d1d5db; font-size:14px;">
-        Request attendance for today, {{ today|date:"M d, Y" }}. Your mentor will confirm it.
-      </p>
+  <div class="checkin-status {% if attendance_locked %}checkin-pending{% else %}checkin-done{% endif %}" style="margin-bottom:16px;">
+    {% if attendance_locked %}
+      <i class="fa-solid fa-lock"></i> Today's attendance is locked. You can still request a previous open day.
+    {% else %}
+      <i class="fa-solid fa-circle-check"></i> Attendance is open for today, {{ today|date:"M d, Y" }}.
+    {% endif %}
+  </div>
+  <form method="post">
+    {% csrf_token %}
+    <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+      <div>
+        <label class="form-label" style="display:block; margin-bottom:6px; color:#d1d5db; font-size:13px;">Date</label>
+        <input type="date" name="date" class="form-input date-input" value="{{ today|date:'Y-m-d' }}" min="{{ start|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}" style="padding:10px 12px; border:1px solid #334155; background:#0b1220; color:#e2e8f0; border-radius:8px;">
+      </div>
       <button type="submit" class="btn btn-primary">
         <i class="fa-solid fa-calendar-check"></i> Request Check-In
       </button>
-    </form>
-  {% endif %}
+    </div>
+    <p style="margin-top:12px; color:#94a3b8; font-size:13px;">
+      Pick any day between {{ start|date:"M d, Y" }} and {{ today|date:"M d, Y" }}. Your mentor will confirm it.
+    </p>
+  </form>
 </div>
 
 <h3 style="margin:28px 0 16px; font-size:18px; font-weight:700;">Recent Attendance</h3>

@@ -70,6 +70,49 @@
         </table>
       </div>
     </section>
+
+    <h2 style="margin-top:32px; margin-bottom:12px; font-size:20px; font-weight:700;">Recent Attendance</h2>
+    <section class="admin-table-section">
+      {% if attendance_records %}
+      <div class="history-table-wrapper">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Student</th>
+              <th>Week</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in attendance_records %}
+            <tr>
+              <td>{{ r.date|date:"M d, Y" }}</td>
+              <td>{{ r.student.full_name }} ({{ r.student.student_id }})</td>
+              <td>{% if r.week %}Week {{ r.week.week_number }}{% else %}-{% endif %}</td>
+              <td>
+                {% if r.status == "present" %}
+                  <span class="status-pill status-success">Present</span>
+                {% elif r.status == "pending" %}
+                  <span class="status-pill status-pending">Pending</span>
+                {% elif r.status == "excused" %}
+                  <span class="status-pill status-pending">Excused</span>
+                {% else %}
+                  <span class="status-pill status-failed">Absent</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state" style="margin-top:8px;">
+        <i class="fa-solid fa-calendar-xmark"></i>
+        <p>No attendance records yet.</p>
+      </div>
+      {% endif %}
+    </section>
   </div>
 </div>
 

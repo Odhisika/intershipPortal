@@ -20,11 +20,126 @@
 
     {% include "core/mentor_nav.html" with active="attendance" %}
 
-    <h1 style="margin-top:32px; font-size:28px;">Attendance Approval</h1>
+    <h1 style="margin-top:32px; font-size:28px;">Attendance</h1>
     <div class="welcome-meta">
-      <span>Approve or reject pending check-in requests from your students.</span>
+      <span>Approve or reject check-in requests and control when students can check in.</span>
     </div>
 
+    <h2 style="margin:28px 0 12px; font-size:20px;">Attendance Window</h2>
+    <div class="admin-table-section">
+      <div class="history-table-wrapper">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Scope</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Today ({{ today|date:"M d, Y" }})</td>
+              <td>
+                {% if today_locked %}
+                  <span class="status-pill status-pending">Locked</span>
+                {% else %}
+                  <span class="status-pill status-success">Open</span>
+                {% endif %}
+              </td>
+              <td>
+                <form method="post" action="{% url 'mentor_attendance_toggle_today' %}" style="display:inline;">
+                  {% csrf_token %}
+                  {% if today_locked %}
+                    <button type="submit" class="btn btn-primary" style="padding:6px 14px; font-size:13px;">
+                      <i class="fa-solid fa-unlock"></i> Open Attendance
+                    </button>
+                  {% else %}
+                    <button type="submit" class="btn btn-outline" style="padding:6px 14px; font-size:13px; border-color:#fca5a5; color:#dc2626;">
+                      <i class="fa-solid fa-lock"></i> Lock Today
+                    </button>
+                  {% endif %}
+                </form>
+              </td>
+            </tr>
+            {% for item in weeks_data %}
+            <tr>
+              <td>Week {{ item.week.week_number }} - {{ item.week.title }} ({{ item.week.course.name }})</td>
+              <td>
+                {% if item.locked %}
+                  <span class="status-pill status-pending">Locked</span>
+                {% else %}
+                  <span class="status-pill status-success">Open</span>
+                {% endif %}
+              </td>
+              <td>
+                <form method="post" action="{% url 'mentor_attendance_toggle_week' item.week.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  {% if item.locked %}
+                    <button type="submit" class="btn btn-primary" style="padding:6px 14px; font-size:13px;">
+                      <i class="fa-solid fa-unlock"></i> Open Week
+                    </button>
+                  {% else %}
+                    <button type="submit" class="btn btn-outline" style="padding:6px 14px; font-size:13px; border-color:#fca5a5; color:#dc2626;">
+                      <i class="fa-solid fa-lock"></i> Lock Week
+                    </button>
+                  {% endif %}
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h2 style="margin:32px 0 12px; font-size:20px;">Training Start Date</h2>
+    <p style="color:#94a3b8; font-size:14px; margin-bottom:12px;">
+      Sets the day the programme began so backfilled attendance is mapped to the correct week.
+      Current start date: <strong style="color:#e2e8f0;">{{ start_date|date:"M d, Y"|default:"Not set" }}</strong>
+    </p>
+    <div class="admin-table-section">
+      <form method="post" action="{% url 'mentor_attendance_set_start' %}" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+        {% csrf_token %}
+        <div>
+          <label class="form-label">Start Date</label>
+          <input type="date" name="date" class="form-input date-input" value="{{ start_date|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}" style="padding:10px 12px; border:1px solid #334155; background:#0b1220; color:#e2e8f0; border-radius:8px;" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding:10px 18px;">
+          <i class="fa-solid fa-calendar-days"></i> Set Start Date
+        </button>
+      </form>
+    </div>
+
+    <h2 style="margin:32px 0 12px; font-size:20px;">Open or Lock a Specific Day</h2>
+    <p style="color:#94a3b8; font-size:14px; margin-bottom:12px;">
+      Use this to open or lock a previous day so students can backfill their attendance requests.
+    </p>
+    <div class="admin-table-section">
+      <div class="admin-form-grid" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+        <form method="post" action="{% url 'mentor_attendance_toggle_date' %}" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+          {% csrf_token %}
+          <div>
+            <label class="form-label">Date</label>
+            <input type="date" name="date" class="form-input date-input" style="padding:10px 12px; border:1px solid #334155; background:#0b1220; color:#e2e8f0; border-radius:8px;" required>
+          </div>
+          <button type="submit" class="btn btn-outline" style="padding:10px 18px;">
+            <i class="fa-solid fa-toggle-on"></i> Toggle Lock
+          </button>
+        </form>
+      </div>
+      {% if locked_dates %}
+      <div style="margin-top:16px;">
+        <p style="color:#94a3b8; font-size:13px; margin-bottom:6px;">Currently locked days:</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          {% for d in locked_dates %}
+          <span class="status-pill status-pending">{{ d|date:"M d, Y" }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <h2 style="margin:32px 0 12px; font-size:20px;">Pending Requests</h2>
     <div class="admin-table-section">
       {% if pending_records %}
       <div class="history-table-wrapper">
@@ -66,6 +181,47 @@
       <div class="empty-state">
         <i class="fa-solid fa-calendar-check"></i>
         <p>No pending attendance requests.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <h2 style="margin:32px 0 12px; font-size:20px;">Recent Marked</h2>
+    <div class="admin-table-section">
+      {% if recent_records %}
+      <div class="history-table-wrapper">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Student</th>
+              <th>Week</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in recent_records %}
+            <tr>
+              <td>{{ r.date|date:"M d, Y" }}</td>
+              <td>{{ r.student.full_name }} ({{ r.student.student_id }})</td>
+              <td>{% if r.week %}Week {{ r.week.week_number }}{% else %}-{% endif %}</td>
+              <td>
+                {% if r.status == "present" %}
+                  <span class="status-pill status-success">Present</span>
+                {% elif r.status == "excused" %}
+                  <span class="status-pill status-pending">Excused</span>
+                {% else %}
+                  <span class="status-pill status-failed">Absent</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="fa-solid fa-calendar-check"></i>
+        <p>No marked attendance yet.</p>
       </div>
       {% endif %}
     </div>
